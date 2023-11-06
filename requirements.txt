@@ -9,3 +9,6 @@ iso639
 Flair 
 presidio_analyzer 
 presidio_anonymizer
+pymupdf==1.23.5
+pyperclip==1.8.2
+moviepy==1.0.3

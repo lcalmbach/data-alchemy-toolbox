@@ -216,13 +216,8 @@ class Anonymizer(ToolBase):
               "Pat", "AZ", "SZ", "REGA", "Rega", "NWS", "CA", "Hirn", "USB", "RQW", "PVK",
               "Schulter", "Schwindel", "Kopf", "NFS", "Ileus", "SBB", "UPK", "O2", "Nierenkolik",
               "Abszess", "Clara NFS", "CRB", "BD","HWI"]
+        self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
-
-    def get_intro(self):
-        script_name, script_extension = os.path.splitext(__file__)
-        with open(f'{script_name}.md', 'r', encoding='utf-8') as file:
-            markdown_content = file.read()
-        return markdown_content
 
     def show_settings(self):
         self.input_type = st.radio(
@@ -249,78 +244,66 @@ class Anonymizer(ToolBase):
             options=self.white_list,
             default=self.white_list
         )
-
-    def show_ui(self):
-        st.subheader(self.title)
-        tabs = st.tabs(['⚙️Einstellungen', '🔧App', '💁informationen'])
-        with tabs[0]:
-            self.show_settings()
-        with tabs[1]:
-            if st.button("Starten"):
-                self.run()
-                st.success("Anonymisierung erfolgreich!")
-        with tabs[2]:
-            text = self.intro
-            st.markdown(text, unsafe_allow_html=True)
     
     def run(self):
-        with st.spinner("Anonymisierung wird initialisiert..."):
-            engine = AnonymizerEngine()
-            configuration = {
-                "nlp_engine_name": "spacy",
-                "models": [
-                    {"lang_code": "de", "model_name": "de_core_news_lg"},
-                    {"lang_code": "en", "model_name": "en_core_web_lg"},
-                ],
-            }
-            flair_recognizer_de = FlairRecognizer(supported_language="de")
-            flair_recognizer_en = FlairRecognizer(supported_language="en")
-            # This would download a very large (+2GB) model on the first run
+        if st.button("Starten"):
+            with st.spinner("Anonymisierung wird initialisiert..."):
+                engine = AnonymizerEngine()
+                configuration = {
+                    "nlp_engine_name": "spacy",
+                    "models": [
+                        {"lang_code": "de", "model_name": "de_core_news_lg"},
+                        {"lang_code": "en", "model_name": "en_core_web_lg"},
+                    ],
+                }
+                flair_recognizer_de = FlairRecognizer(supported_language="de")
+                flair_recognizer_en = FlairRecognizer(supported_language="en")
+                # This would download a very large (+2GB) model on the first run
 
-            registry = RecognizerRegistry()
-            registry.load_predefined_recognizers()
-            phone_recognizer_ch = predefined_recognizers.PhoneRecognizer(
-                supported_language="de", supported_regions=("US", "UK", "DE", "FR", "IT", "CH")
-            )
-            birthday_recognizer_ch = predefined_recognizers.DateRecognizer(context=["birthday"], supported_language="de")
-            registry.add_recognizer(flair_recognizer_en)
-            registry.add_recognizer(flair_recognizer_de)
-            registry.add_recognizer(phone_recognizer_ch)
-            registry.add_recognizer(birthday_recognizer_ch)
+                registry = RecognizerRegistry()
+                registry.load_predefined_recognizers()
+                phone_recognizer_ch = predefined_recognizers.PhoneRecognizer(
+                    supported_language="de", supported_regions=("US", "UK", "DE", "FR", "IT", "CH")
+                )
+                birthday_recognizer_ch = predefined_recognizers.DateRecognizer(context=["birthday"], supported_language="de")
+                registry.add_recognizer(flair_recognizer_en)
+                registry.add_recognizer(flair_recognizer_de)
+                registry.add_recognizer(phone_recognizer_ch)
+                registry.add_recognizer(birthday_recognizer_ch)
+                
+                provider = NlpEngineProvider(nlp_configuration=configuration)
+                nlp_engine_with_german = provider.create_engine()
+                analyzer = AnalyzerEngine(nlp_engine=nlp_engine_with_german, registry=registry, supported_languages=["de", "en"])
             
-            provider = NlpEngineProvider(nlp_configuration=configuration)
-            nlp_engine_with_german = provider.create_engine()
-            analyzer = AnalyzerEngine(nlp_engine=nlp_engine_with_german, registry=registry, supported_languages=["de", "en"])
-        
-        with st.spinner("Anonymisierung ist gestartet..."):
-            cols = st.columns([4, 1, 4])
-            results = analyzer.analyze(
-                self.text,
-                language="de",
-                return_decision_process=True,
-                allow_list=self.white_list
-            )
-            self.text_result = engine.anonymize(text=self.text, analyzer_results=results).text
-            with cols[0]:
-                st.write("**Input**")
-                st.write(self.text)
-            with cols[2]:
-                st.write("**Output**")
-                st.download_button(label="Download", data=self.text_result, file_name="anonymisiert.txt", mime="text/plain")
-                file_names = [
-                    self.output_file_long,
-                    self.output_file_short,
-                    self.output_file_stat,
-                    self.output_errors,
-                ]
-                zip_files(file_names, self.output_file_zip)
-                with open(classifier.output_file_zip, "rb") as fp:
-                                    btn = st.download_button(
-                                        label=lang['download_results'],
-                                        data=fp,
-                                        file_name="download.zip",
-                                        mime="application/zip",
-                                        help=lang['download_help_text']
-                                    )
-            
+            with st.spinner("Anonymisierung ist gestartet..."):
+                cols = st.columns([4, 1, 4])
+                results = analyzer.analyze(
+                    self.text,
+                    language="de",
+                    return_decision_process=True,
+                    allow_list=self.white_list
+                )
+                self.text_result = engine.anonymize(text=self.text, analyzer_results=results).text
+                with cols[0]:
+                    st.write("**Input**")
+                    st.write(self.text)
+                with cols[2]:
+                    st.write("**Output**")
+                    st.download_button(label="Download", data=self.text_result, file_name="anonymisiert.txt", mime="text/plain")
+                    file_names = [
+                        self.output_file_long,
+                        self.output_file_short,
+                        self.output_file_stat,
+                        self.output_errors,
+                    ]
+                    zip_files(file_names, self.output_file_zip)
+                    with open(classifier.output_file_zip, "rb") as fp:
+                                        btn = st.download_button(
+                                            label=lang['download_results'],
+                                            data=fp,
+                                            file_name="download.zip",
+                                            mime="application/zip",
+                                            help=lang['download_help_text']
+                                        )
+                
 

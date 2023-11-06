@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import logging
-from tools import classifier, speech2text, summary, translation, anonymizer, intro
+from tools import classifier, speech2text, summary, translation, anonymizer, intro, pdf2text
 
 __version__ = "0.0.1"
 __author__ = "data-alchemists des Digilab BS"
@@ -83,6 +83,10 @@ def main():
         if "translation" not in st.session_state:
             st.session_state["translation"] = translation.Translation(logger)
         app = st.session_state["translation"]
+    elif menu_action == menu_options[6]:
+        if "pdf2text" not in st.session_state:
+            st.session_state["pdf2text"] = pdf2text.Pdf2Text(logger)
+        app = st.session_state["pdf2text"]
     app.show_ui()
     show_info_box()
 
