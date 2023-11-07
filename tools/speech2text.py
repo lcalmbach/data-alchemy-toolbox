@@ -4,33 +4,46 @@ import os
 from tools.tool_base import ToolBase
 from moviepy.editor import *
 import openai
+import json
+import pyperclip
+from helper import get_var
 
+openai.api_key = get_var("OPENAI_API_KEY")
 
 class Speech2Text(ToolBase):
     def __init__(self, logger):
         self.logger = logger
         self.title = "Audio zu Text"
-        self.formats = ['Audio/Video Datei', 'Sammlung von Audio-Dateien (zip)']
+        self.formats = ['Demo', 'Audio/Video Datei', 'Sammlung von Audio-Dateien (zip)']
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
         self.output = {}
+        self.file = ''
+        self.text = ''
 
     def show_settings(self):
         self.input_type = st.radio(
             "Input für Speech2Text",
             options=self.formats
         )
+        if self.formats.index(self.input_type) == 0:
+            AUDIO_DEMO_FILE = "./data/demo/demo_audio.mp3"
+            self.file = AUDIO_DEMO_FILE
+            st.audio(AUDIO_DEMO_FILE)
 
-    def extract_audio_from_video(self, video_file):
+    def extract_audio_from_video(self, video_file:str)-> str:
         audio_file_name = video_file.name.split('.')[0] + '.mp3'
         video = VideoFileClip(video_file)
         audio = video.audio
         audio.write_audiofile(audio_file_name)
         return audio_file_name
 
-    def transcribe(filename):
+    def transcribe(self, filename):
+        
         if filename.endswith('.mp4'):
             audio_file_name = self.extract_audio_from_video(filename)
+        elif filename.endswith('.zip'):
+            st.warning("Zip-Dateien werden noch nicht unterstützt.")
         else:
             audio_file_name = filename
         
@@ -38,27 +51,24 @@ class Speech2Text(ToolBase):
         transcript = openai.Audio.transcribe("whisper-1", audio_file)
         with open('./audio_output.json', 'w') as outfile:
             json.dump(transcript, outfile, indent=4)
-
+        return transcript['text']
 
     def run(self):
-        self.file = st.file_uploader('Audio Datei hochladen')
-        
-        if st.button("Starten"):
-            if self.formats.index(self.input_type) == 0:
-                if self.file:
-                    self.text = self.extract_text_from_pdf(self.file)
-                    dummy = st.text_area("Text", value=self.text, height=400)
-                    
-        if self.formats.index(self.input_type) == 0 and self.text != "":
+        if st.button("Transkribieren"):
+            self.text = ''
+            with st.spinner("Transkribiere Audio..."):
+                self.text = self.transcribe(self.file)
+
+        if self.text != '':
+            st.markdown(self.text)
             cols = st.columns(2, gap='small')
             with cols[0]:
-                if st.button("Text in Zwischenablage kopieren"):
+                if st.button("📋 Text in Zwischenablage kopieren"):
                     pyperclip.copy(self.text,)
-                    st.success("Text wurde in die Zwischenablage kopiert.")
             with cols[1]:
                 btn = st.download_button(
-                    label="Text als txt-Datei herunterladen",
+                    label='⬇️ Datei herunterladen',
                     data=self.text,
-                    file_name="pdf2text.txt",
+                    file_name="download.zip",
                     mime="text/plain"
                 )

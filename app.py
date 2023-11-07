@@ -1,12 +1,20 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import logging
-from tools import classifier, speech2text, summary, translation, anonymizer, intro, pdf2text
+from tools import (
+    classifier,
+    speech2text,
+    summary,
+    translation,
+    anonymizer,
+    intro,
+    pdf2text,
+)
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 __author__ = "data-alchemists des Digilab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2023-05-09"
+VERSION_DATE = "2023-11-7"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"

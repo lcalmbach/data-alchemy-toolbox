@@ -246,7 +246,7 @@ class Anonymizer(ToolBase):
         )
     
     def run(self):
-        if st.button("Starten"):
+        if st.button("Starten", disabled=True):
             with st.spinner("Anonymisierung wird initialisiert..."):
                 engine = AnonymizerEngine()
                 configuration = {
