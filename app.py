@@ -4,14 +4,14 @@ import logging
 from tools import (
     classifier,
     speech2text,
-    summary,
+    summarizer,
     translation,
     anonymizer,
     intro,
     pdf2text,
 )
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __author__ = "data-alchemists des Digilab BS"
 __author_email__ = "data-alchemists@bs.ch"
 VERSION_DATE = "2023-11-7"
@@ -85,7 +85,7 @@ def main():
         app = st.session_state["speech2text"]
     elif menu_action == menu_options[4]:
         if "summary" not in st.session_state:
-            st.session_state["summary"] = summary.Summary(logger)
+            st.session_state["summary"] = summarizer.Summary(logger)
         app = st.session_state["summary"]
     elif menu_action == menu_options[5]:
         if "translation" not in st.session_state:

@@ -1,17 +1,18 @@
 ## Willkommen im DataAlchemy-Toolkit
 
-Die DataAlchemy Toolbox (DAT) ist eine Sammlung von Werkzeugen für die Verarbeitung von unstrukturierten Daten. Mit dieser Toolbox kannst du:
-- Texte anonymiseren, sodass du sie anschliessend mit LLM Technologien in der Cloud weiterverarbeiten kannst. 🚧
-- Texte nach vorgegebenen Kategorien klassifizieren 🚧
-- Texte in Sprache umwandeln 🚧✅
-- Texte anonymisieren 🚧
-- Text übersetzen 🚧
-- pdf-Dateien in Text umwandeln 🚧✅
+Die DataAlchemy Toolbox (DATx) ist eine Sammlung von Werkzeugen für die Verarbeitung von unstrukturierten Daten. Diese Toolbox:
+- Anonymisiert Texte, sodass du sie anschliessend mit LLM Technologien in der Cloud weiterverarbeiten kannst. 🚧
+- Klassifiziert Texte nach vorgegebenen Kategorien 🚧✅
+- Audio Dateien in Text um 🚧✅
+- Übesetzt Texte 🚧
+- Fasst Texte aus Text oder PDF Dateien zusammen 🚧
+- Wandelt pdf-Dateien in Text um 🚧✅
 
-Legende:
+Legende Status:
 
-🚧: Läuft noch nicht
+🚧: Funktioniert oder nur marginal
 
 🚧✅: läuft nur im Demo Mode
 
 ✅: Fertig implementiert
+✅✅: Fertig implementiert und getestet

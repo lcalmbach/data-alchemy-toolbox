@@ -10,36 +10,7 @@ from datetime import datetime
 from helper import get_var, get_random_word, create_file, append_row, zip_files
 
 
-MAX_ERRORS = 3
-LLM_RETRIES = 3
-SLEEP_TIME_AFTER_ERROR = 30
-OUTPUT_LONG = "./output/output_{}.csv"
-OUTPUT_SHORT = "./output/output_short_{}.csv"
-OUTPUT_STAT = "./output/output_stat_{}.csv"
-OUTPUT_ZIP = "./output/output_{}.zip"
-OUTPUT_ERROR = "./output/output_error_{}.txt"
-DEFAULT_MODEL = "gpt-3.5-turbo"
-DEFAULT_TEMP = 0.3
-DEAFULT_TOP_P = 1.0
-DEFAULT_MAX_TOKENS = 500
-DEFAULT_FREQUENCY_PENALTY = 0.0
-DEFAULT_PRESENCE_PENALTY = 0.0
-MODEL_OPTIONS = ["gpt-3.5-turbo", "gpt-4"]
-MODEL_TOKEN_PRICING = {
-    "gpt-3.5-turbo": {"in": 0.0015, "out": 0.002},
-    "gpt-4": {"in": 0.03, "out": 0.06},
-}
-SYSTEM_PROMPT_TEMPLATE = """You are a expert data labeller. You will be provided with a text. Your task is to assign the text to one to maximum {} of the following categories: [{}]
-Answer with a list of indexes of the matching categories for the given text. If none of the categories apply to the text return [{}]. Always answer with a list of indices. The result list must only include numbers. For
-examples: 
-categories: [1: Bildung, 2: Bevölkerung, 3: Arbeit und Erwerb, 4: Energie]
-text: "Wieviele Personen in Basel sind 100 jährig oder älter?"
-output: [2]
 
-categories: [1: Bildung, 2: Bevölkerung, 3: Arbeit und Erwerb, 4: Energie]
-text: "Wie spät ist es?"
-output: [-99]
-"""
 
 
 class Classifier:
@@ -73,6 +44,11 @@ class Classifier:
         self.output_file_zip = OUTPUT_ZIP.format(self.key)
         self.tokens_in = 0
         self.tokens_out = 0
+        self.formats = ['Demo', 'Upload csv/xlsx', 'Interaktive Eingabe']
+        self.input_type = self.formats[0]
+        self.system_prompt = ""
+        self.no_match_code = -99
+        self.max_categories = 10
 
     @property
     def texts_df(self):
@@ -229,51 +205,45 @@ class Classifier:
         )
         st.altair_chart(bar_chart, use_container_width=True)
 
-    def show_menu(self):
-        def show_menu():
-            def main() -> None:
-                
-                st.header(APP_NAME)
-                global lang
-
-                init_lang_dict_complete("app.py")
-
-                if not ("lang" in st.session_state):
-                    # first item is default language
-                    st.session_state["used_languages_dict"] = get_used_languages()
-                    st.session_state["lang"] = next(
-                        iter(st.session_state["used_languages_dict"].items())
-                    )[0]
-                    refresh_lang()
-
-                lang = st.session_state["lang_dict"]
-                lottie_search_names, ok = get_lottie()
-                if ok:
-                    with st.sidebar:
-                        st_lottie(lottie_search_names, height=140, loop=20)
-                else:
-                    pass
-                display_language_selection()
-                mode_options = lang["mode-options"]
-
-
-                sel_mode = st.radio(lang["mode"], options=mode_options)
-                if mode_options.index(sel_mode) == 0:
-                    df_texts, dic_categories = get_demo_data()
-                if mode_options.index(sel_mode) == 1:
-                    df_texts, dic_categories = get_uploaded_files()
-                    with st.columns(3)[0]:
-                        llm_settings["max_categories"] = st.number_input(
-                            lang['max_categories'], 1, 100, 3, 1
-                        )
-                if mode_options.index(sel_mode) == 2:
-                    df_texts, dic_categories = get_user_input()
-
-                llm_settings["code_for_no_match"] = st.selectbox(
-                    lang["code_for_no_match"],
-                    list(dic_categories.keys()),
-                    format_func=lambda x: dic_categories[x],
+    def show_settings(self):
+            self.input_type  = st.selectbox(
+                    "Selection type",
+                    options=self.formats,
                 )
+                if selection_options.index(settings["selection_type"]) == 0:
+                    settings["from_rec"] = 0
+                    settings["to_rec"] = MAX_RECORDS
+                elif selection_options.index(settings["selection_type"]) == 1:
+                    settings["from_rec"] = st.number_input("From record", 0, MAX_RECORDS, 0, 10)
+                    settings["to_rec"] = st.number_input("To record", 0, MAX_RECORDS, 10, 10)
+                elif selection_options.index(settings["selection_type"]) == 2:
+                    settings["max_records"] = st.number_input(
+                        "Max. number of records", 10, MAX_RECORDS, 10, 10
+                    )
+                settings["model"] = st.selectbox(lang['model'], gpt_classifier.MODEL_OPTIONS)
+                settings["temperature"] = st.slider(
+                    label=lang['temperature'],
+                    value=gpt_classifier.DEFAULT_TEMP,
+                    min_value=0.0,
+                    max_value=1.0,
+                    step=0.1,
+                    help=lang["help_temperature"],
+                )
+                settings["max_tokens"] = st.slider(
+                    label=lang['max_number_of_tokens'],
+                    value=gpt_classifier.DEFAULT_MAX_TOKENS,
+                    min_value=0,
+                    max_value=4096,
+                    step=1,
+                    help=lang["help_max_tokens"],
+                )
+                settings["max_categories"] = 3
+            
+            llm_settings["code_for_no_match"] = st.selectbox(
+                lang["code_for_no_match"],
+                list(dic_categories.keys()),
+                format_func=lambda x: dic_categories[x],
+            )
                 if not df_texts.empty and dic_categories:
                     df_texts = record_selection(df_texts, llm_settings)
                     preview_input(df_texts, dic_categories)
@@ -307,53 +277,6 @@ class Classifier:
                                         help=lang['download_help_text']
                                     )
                                         
-        def get_settings():
-            """
-            Prompts the user to enter model poarameters and returns them as a dictionary.
-            Default values are dinfed in the gpt_classifier module.
-
-            Returns:
-                settings (dict): A dictionary containing the user-entered settings.
-            """
-            settings = {}
-            with st.sidebar.expander(lang["llm_settings"]):
-
-                settings["selection_type"] = st.selectbox(
-                    "Selection type",
-                    options=selection_options,
-                    help=lang['selection_type_help'],
-                )
-                if selection_options.index(settings["selection_type"]) == 0:
-                    settings["from_rec"] = 0
-                    settings["to_rec"] = MAX_RECORDS
-                elif selection_options.index(settings["selection_type"]) == 1:
-                    settings["from_rec"] = st.number_input("From record", 0, MAX_RECORDS, 0, 10)
-                    settings["to_rec"] = st.number_input("To record", 0, MAX_RECORDS, 10, 10)
-                elif selection_options.index(settings["selection_type"]) == 2:
-                    settings["max_records"] = st.number_input(
-                        "Max. number of records", 10, MAX_RECORDS, 10, 10
-                    )
-                settings["model"] = st.selectbox(lang['model'], gpt_classifier.MODEL_OPTIONS)
-                settings["temperature"] = st.slider(
-                    label=lang['temperature'],
-                    value=gpt_classifier.DEFAULT_TEMP,
-                    min_value=0.0,
-                    max_value=1.0,
-                    step=0.1,
-                    help=lang["help_temperature"],
-                )
-                settings["max_tokens"] = st.slider(
-                    label=lang['max_number_of_tokens'],
-                    value=gpt_classifier.DEFAULT_MAX_TOKENS,
-                    min_value=0,
-                    max_value=4096,
-                    step=1,
-                    help=lang["help_max_tokens"],
-                )
-                settings["max_categories"] = 3
-
-            return settings
-
 
         def preview_input(df_texts, dic_categories):
             """

@@ -2,6 +2,10 @@
 import streamlit as st
 import time
 
+
+PDF_DEMO_FILE = './data/demo/153.260-8-2.de.pdf'
+
+
 class Summary():
     def __init__(self):
         self.title = "Zusammenfassung"

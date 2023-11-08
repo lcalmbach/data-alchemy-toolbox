@@ -1,0 +1,14 @@
+;cat_id;count;cat_code
+0;2;1;Kurze Wege
+1;3;5;Öffentlicher Verkehr
+2;4;1;Viele Ladengeschäfte, Restaurants
+3;5;4;Parks, Plätze, Grünflächen
+4;6;4;Menschen
+5;7;5;Freizeitangebote (Sport, Kulturelle Anlässe etc.)
+6;8;1;Alles
+7;9;1;Anderes
+8;11;1;Schule/ Ausbildung/ Arbeitsmöglichkeiten
+9;12;4;Stadt (Innenstadt, Grösse der Stadt, Basel ist schön) 
+10;14;1;Sicherheit
+11;15;1;Infrastruktur
+12;999;1;Keine Angabe
