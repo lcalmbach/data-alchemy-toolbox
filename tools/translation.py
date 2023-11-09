@@ -3,9 +3,12 @@ import streamlit as st
 import time
 import pandas as pd
 import iso639
+import os
 
-class Translation():
-    def __init__(self):
+from tools.tool_base import ToolBase
+class Translation(ToolBase):
+    def __init__(self, logger):
+        self.logger = logger
         self.title = "Übersetzung"
         self.lang_source = 'de'
         self.lang_target = 'en'
@@ -13,6 +16,8 @@ class Translation():
         self.language_dict = self.get_language_dict()
         self.translation_input_options = ['Dokumentensammlung (gezippt)', 'Texte aus csv-Datei', 'json-Datei']
         self.translation_input_type = self.translation_input_options[0]
+        self.script_name, script_extension = os.path.splitext(__file__)
+        self.intro = self.get_intro()
 
     def show_settings(self):
         index_source = list(self.language_dict.keys()).index(self.lang_source)
@@ -35,20 +40,6 @@ class Translation():
         keys = [lang["iso639_1"] for lang in iso639.data if lang["iso639_1"] != ""]
         values = [lang["name"] for lang in iso639.data if lang["iso639_1"] != ""]
         return dict(zip(keys, values))
-
-
-    def show_ui(self):
-        st.subheader(self.title)
-        tabs = st.tabs(['⚙️Einstellungen', '🔧App', '💁informationen'])
-        with tabs[0]:
-            self.show_settings()
-        with tabs[1]:
-            if st.button("Starten"):
-                with st.spinner("Übersetzung läuft..."):
-                    time.sleep(10)
-                st.success("Übersetzung erfolgreich!")
-        with tabs[2]:
-            text = "Mit diesem Tool kannst du Texte übersetzen."
-            st.markdown(text, unsafe_allow_html=True)
+    
     def run(self):
-        ...
+        st.info("Diese Option wird noch nicht unterstützt.")

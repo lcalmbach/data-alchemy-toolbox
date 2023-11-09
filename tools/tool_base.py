@@ -1,14 +1,93 @@
 import streamlit as st
 import os
+import openai
+import re
+import time
+import json
+from helper import (get_var)
+
+MAX_ERRORS = 3
+LLM_RETRIES = 3
+SLEEP_TIME_AFTER_ERROR = 30
+DEFAULT_MODEL = "gpt-3.5-turbo"
+DEAFULT_TOP_P = 1.0
+DEFAULT_TEMPERATURE = 0.3
+DEFAULT_MAX_TOKENS = 500
+DEFAULT_FREQUENCY_PENALTY = 0.0
+DEFAULT_PRESENCE_PENALTY = 0.0
+MODEL_OPTIONS = ["gpt-3.5-turbo", "gpt-4"]
+MODEL_TOKEN_PRICING = {
+    "gpt-3.5-turbo": {"in": 0.0015, "out": 0.002},
+    "gpt-4": {"in": 0.03, "out": 0.06},
+}
+
 
 class ToolBase:
     def __init__(self):
         pass
 
     def get_intro(self):
+        """
+        Reads the markdown content from a file with the same name as the script and returns it.
+
+        Returns:
+        str: The markdown content of the file.
+        """
         with open(f'{self.script_name}.md', 'r', encoding='utf-8') as file:
             markdown_content = file.read()
         return markdown_content
+
+    def token_use_expression(self, tokens: list):
+        cost_tokens_in = (
+                MODEL_TOKEN_PRICING[self.model]["in"] * tokens[0] / 1000
+            )
+        cost_tokens_out = (
+            MODEL_TOKEN_PRICING[self.model]["out"] * tokens[1] / 1000
+        )
+        return f"""
+            Tokens in: {tokens[0]} Kosten: ${cost_tokens_in: .2f}\n
+            Tokens out: {tokens[1]} Kosten: ${cost_tokens_out: .2f}\n
+            Total Tokens: {tokens[0] + tokens[1]} Kosten: ${(cost_tokens_in + cost_tokens_out): .2f}
+            """
+
+    def get_completion(self, text, index):
+        """Generates a response using the OpenAI ChatCompletion API based on
+        the given text.
+
+        Args:
+            text (str): The user's input.
+
+        Returns:
+            str: The generated response.
+
+        Raises:
+            None
+        """
+
+        openai.api_key = get_var("OPENAI_API_KEY")
+        retries = LLM_RETRIES
+        tokens = []
+        while retries > 0:
+            try:
+                response = openai.ChatCompletion.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": text},
+                    ],
+                    temperature=self.temperature,
+                    request_timeout=15,
+                    max_tokens=self.max_tokens,
+                )
+                tokens.append(response["usage"]["prompt_tokens"])
+                tokens.append(response["usage"]["completion_tokens"])
+                output = response["choices"][0]["message"]["content"]
+                return output, tokens
+            except Exception as err:
+                st.error(f"OpenAIError {err}, Index = {index}")
+                retries -= 1
+                time.sleep(SLEEP_TIME_AFTER_ERROR)
+        return [], 0
 
     def show_settings(self):
         pass
@@ -18,7 +97,7 @@ class ToolBase:
 
     def show_ui(self):
         st.subheader(self.title)
-        tabs = st.tabs(['⚙️Einstellungen', '🔧App', '💁informationen'])
+        tabs = st.tabs(['⚙️Input und Einstellungen', '🏃Ausführen', '💁Informationen'])
         with tabs[0]:
             self.show_settings()
         with tabs[1]:
