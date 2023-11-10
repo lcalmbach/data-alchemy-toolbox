@@ -7,16 +7,18 @@ import requests
 import pyperclip
 from moviepy.editor import *
 
+ENCODING_OPTIONS = ['utf-8', 'latin1', 'cp1252']
+
 class Pdf2Text(ToolBase):
     def __init__(self, logger):
-        self.logger = logger
-        self.title = "Pdf zu Text"
+        super().__init__(logger)
+        self.title = "PDF zu Text"
         self.formats = ['PDF Datei', 'Sammlung von PDF-Dateien (zip)']
-        self.script_name, script_extension = os.path.splitext(__file__)
-        self.intro = self.get_intro()
         self.text = ""
         self.encoding_source = "utf-8"
         self.encoding_target = "utf-8"
+        self.script_name, script_extension = os.path.splitext(__file__)
+        self.intro = self.get_intro()
 
     def show_settings(self):
         self.input_type = st.radio(
@@ -25,14 +27,14 @@ class Pdf2Text(ToolBase):
         )
         self.remove_crlf = st.checkbox("Zeilenendezeichen entfernen")
         self.remove_sep = st.checkbox(";-Zeichen entfernen")
-        encoding_options = ['utf-8', 'latin1', 'cp1252']
+        
         self.encoding_source = st.selectbox(
             label='Quellen-Encoding',
-            options=encoding_options
+            options=ENCODING_OPTIONS
         )
         self.encoding_target = st.selectbox(
             label='Ziel-Encoding',
-            options=encoding_options
+            options=ENCODING_OPTIONS
         )
         if self.formats.index(self.input_type) == 0:
             self.file = st.file_uploader('Datei hochladen')
@@ -56,24 +58,47 @@ class Pdf2Text(ToolBase):
         for page in pdf_document:
             pdf_text += page.get_text()
             page_text_unicode = pdf_text.encode(self.encoding_source).decode(self.encoding_target)
+            if self.remove_crlf:
+                page_text_unicode = page_text_unicode.replace("\n", " ")
+            if self.remove_sep:
+                page_text_unicode = page_text_unicode.replace(";", "")
             pdf_text += page_text_unicode
         return pdf_text
 
     def read_pdf_from_url(url: str):
-        # Step 1: Download the PDF
+        """
+        Downloads a PDF from a given URL and returns its text content.
+
+        Args:
+            url (str): The URL of the PDF to download.
+
+        Returns:
+            str: The text content of the downloaded PDF.
+
+        Raises:
+            Exception: If the PDF fails to download.
+        """
         response = requests.get(url)
+        pdf_text = ""
         if response.status_code == 200:
             with open("temp.pdf", "wb") as f:
                 pdf = fitz.open("temp.pdf")
-                text = ""
                 for page_num in range(len(pdf)):
                     page = pdf.load_page(page_num)
-                    text += page.get_text()
-                return text
+                    pdf_text += page.get_text()
+            return pdf_text
         else:
             st.error(f"Failed to download PDF. Status code: {response.status_code}")
+            raise Exception("Failed to download PDF.")
 
     def run(self):
+        """
+        Runs the PDF2Text tool.
+
+        If the 'Starten' button is clicked and the input type is PDF, extracts text from the selected PDF file and displays it in a text area.
+        If the 'Text in Zwischenablage kopieren' button is clicked, copies the extracted text to the clipboard.
+        If the 'Text als txt-Datei herunterladen' button is clicked, downloads the extracted text as a txt file.
+        """
         if st.button("Starten"):
             if self.formats.index(self.input_type) == 0:
                 if self.file:
@@ -84,10 +109,9 @@ class Pdf2Text(ToolBase):
             cols = st.columns(2, gap='small')
             with cols[0]:
                 if st.button("Text in Zwischenablage kopieren"):
-                    pyperclip.copy(self.text,)
-                    st.success("Text wurde in die Zwischenablage kopiert.")
+                    pyperclip.copy(self.text)
             with cols[1]:
-                btn = st.download_button(
+                st.download_button(
                     label="Text als txt-Datei herunterladen",
                     data=self.text,
                     file_name="pdf2text.txt",

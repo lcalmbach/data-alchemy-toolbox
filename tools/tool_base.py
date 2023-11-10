@@ -9,12 +9,8 @@ from helper import (get_var)
 MAX_ERRORS = 3
 LLM_RETRIES = 3
 SLEEP_TIME_AFTER_ERROR = 30
-DEFAULT_MODEL = "gpt-3.5-turbo"
-DEAFULT_TOP_P = 1.0
 DEFAULT_TEMPERATURE = 0.3
 DEFAULT_MAX_TOKENS = 500
-DEFAULT_FREQUENCY_PENALTY = 0.0
-DEFAULT_PRESENCE_PENALTY = 0.0
 MODEL_OPTIONS = ["gpt-3.5-turbo", "gpt-4"]
 MODEL_TOKEN_PRICING = {
     "gpt-3.5-turbo": {"in": 0.0015, "out": 0.002},
@@ -23,8 +19,21 @@ MODEL_TOKEN_PRICING = {
 
 
 class ToolBase:
-    def __init__(self):
-        pass
+    def __init__(self, logger):
+        self.logger = logger
+        self.max_tokens = DEFAULT_MAX_TOKENS
+        self.temperature = DEFAULT_TEMPERATURE
+        self.model = MODEL_OPTIONS[0]
+        self.tokens_in = 0
+        self.tokens_out = 0
+
+    def get_model(self):
+        return st.selectbox(
+            "Model",
+            options=MODEL_OPTIONS,
+            index=0,
+            help="Wählen Sie das LLM Modell, das Sie verwenden möchten."
+        )
 
     def get_intro(self):
         """
@@ -92,12 +101,15 @@ class ToolBase:
     def show_settings(self):
         pass
 
-    def run(self):
-        pass
-
     def show_ui(self):
+        """
+        Displays the user interface for the tool, which includes three tabs: 
+        'Input and Settings', 'Run', and 'Information'. The 'Input and Settings' 
+        tab displays the tool's settings, the 'Run' tab executes the tool, and the 
+        'Information' tab displays introductory text about the tool.
+        """
         st.subheader(self.title)
-        tabs = st.tabs(['⚙️Input und Einstellungen', '🏃Ausführen', '💁Informationen'])
+        tabs = st.tabs(['⚙️Input und Einstellungen', '🚀Ausführen', '💁Informationen'])
         with tabs[0]:
             self.show_settings()
         with tabs[1]:
@@ -105,3 +117,6 @@ class ToolBase:
         with tabs[2]:
             text = self.intro
             st.markdown(text, unsafe_allow_html=True)
+
+    def run(self):
+        pass

@@ -206,7 +206,7 @@ class FlairRecognizer(EntityRecognizer):
 
 class Anonymizer(ToolBase):
     def __init__(self, logger):
-        self.logger = logger
+        super().__init__(logger)
         self.title = "Anonymisierung"
         self.texts_df = pd.DataFrame()
         self.formats = ["Demo", "csv-Datai", "json-Datei", "Dokumentensammlung txt (gezippt)"]

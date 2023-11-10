@@ -2,6 +2,7 @@
 import streamlit as st
 import os
 
+
 class Intro():
     def __init__(self, logger):
         self.intro = self.get_intro()

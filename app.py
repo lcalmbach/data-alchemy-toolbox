@@ -11,10 +11,10 @@ from tools import (
     pdf2text,
 )
 
-__version__ = "0.0.3"
-__author__ = "data-alchemists des Digilab BS"
+__version__ = "0.0.4"
+__author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2023-11-7"
+VERSION_DATE = "2023-11-10"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
@@ -22,7 +22,7 @@ APP_URL = "https://data-alchemy-toolbox.streamlit.app/"
 
 
 def show_info_box():
-    impressum = f"""<div style="background-color:powderblue; padding: 10px;border-radius: 15px;">
+    impressum = f"""<div style="background-color:#34282C; padding: 10px;border-radius: 15px; border:solid 1px white;">
     <small>Autoren: <a href="mailto:{__author_email__}">{__author__}</a><br>
     Version: {__version__} ({VERSION_DATE})<br>
     <a href="{GIT_REPO}">git-repo</a>

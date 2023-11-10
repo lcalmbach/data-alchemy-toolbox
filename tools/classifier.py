@@ -3,7 +3,13 @@ import streamlit as st
 import time
 import openai
 from datetime import datetime
-from tools.tool_base import ToolBase
+from tools.tool_base import (
+    ToolBase,
+    SLEEP_TIME_AFTER_ERROR,
+    MODEL_OPTIONS,
+    LLM_RETRIES,
+    MAX_ERRORS,
+)
 import os
 import json
 import re
@@ -12,41 +18,28 @@ import altair as alt
 from helper import (create_file, append_row, zip_files, get_var)
 
 
-MAX_ERRORS = 3
-LLM_RETRIES = 3
-SLEEP_TIME_AFTER_ERROR = 30
 OUTPUT_LONG = "./data/output/output_{}.csv"
 OUTPUT_SHORT = "./data/output/output_short_{}.csv"
 OUTPUT_STAT = "./data/output/output_stat_{}.csv"
 OUTPUT_ZIP = "./data/output/output_{}.zip"
 OUTPUT_ERROR = "./data/output/output_error_{}.txt"
 DEFAULT_MODEL = "gpt-3.5-turbo"
-DEFAULT_TEMP = 0.3
-DEAFULT_TOP_P = 1.0
-DEFAULT_TEMPERATURE = 0.3
-DEFAULT_MAX_TOKENS = 500
-DEFAULT_FREQUENCY_PENALTY = 0.0
-DEFAULT_PRESENCE_PENALTY = 0.0
-MODEL_OPTIONS = ["gpt-3.5-turbo", "gpt-4"]
-MODEL_TOKEN_PRICING = {
-    "gpt-3.5-turbo": {"in": 0.0015, "out": 0.002},
-    "gpt-4": {"in": 0.03, "out": 0.06},
-}
-SYSTEM_PROMPT_TEMPLATE = """You are a expert data classifier. You will be provided with a text. Your task is to assign the text to one to maximum {0} of the following categories: [{1}]
-Answer with a list of indexes of the matching categories for the given text. If none of the categories apply to the text return [{2}]. Always answer with a list of indices. The result list must only include numbers. For
-examples: 
-categories: [1: Bildung, 2: Bevölkerung, 3: Arbeit und Erwerb, 4: Energie]
-text: "Wieviele Personen in Basel sind 100 jährig oder älter?"
-output: [2]
 
-categories: [1: Bildung, 2: Bevölkerung, 3: Arbeit und Erwerb, 4: Energie]
-text: "Wie spät ist es?"
+SYSTEM_PROMPT_TEMPLATE = """You are a expert data classifier. You will be provided with a text. Your task is to assign the text to one to maximum {0} of the following categories: [{1}]\n
+Answer with a list of indexes of the matching categories for the given text. If none of the categories apply to the text return [{2}]. Always answer with a list of indices. The result list must only include numbers.\n
+examples for categories: [1: Bildung, 2: Bevölkerung, 3: Arbeit und Erwerb, 4: Energie]\n
+text: "Wieviele Personen in Basel sind 100-jährig oder älter?"\n
+output: [2]\n
+\n
+categories: [1: Bildung, 2: Bevölkerung, 3: Arbeit und Erwerb, 4: Energie]\n
+text: "Wie spät ist es?"\n
 output: [{2}]
 """
 
 
 class Classifier(ToolBase):
     def __init__(self, logger):
+        super().__init__(logger)
         self.title = "Klassifizerung"
         self._texts_df = pd.DataFrame()
         self._categories_dic = {}
@@ -58,7 +51,6 @@ class Classifier(ToolBase):
         
         self.formats = ['Demo', 'Upload csv/xlsx', 'Interaktive Eingabe']
         self.input_type = self.formats[0]
-        self.system_prompt = ""
         self.no_match_code = -99
         self.no_match_code_options = []
         self.max_categories = 10
@@ -70,11 +62,7 @@ class Classifier(ToolBase):
         self.output_file_stat = OUTPUT_STAT.format(self.key)
         self.output_errors = OUTPUT_ERROR.format(self.key)
         self.output_file_zip = OUTPUT_ZIP.format(self.key)
-        self.tokens_in = 0
-        self.tokens_out = 0
-        self.temperature = DEFAULT_TEMP
-        self.max_tokens = DEFAULT_MAX_TOKENS
-
+        
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
 
@@ -97,11 +85,12 @@ class Classifier(ToolBase):
         for k, v in value.items():
             cat_list.append(f'{k}: "{v}"')
         self.category_list_expression = ",".join(cat_list)
-        
-    def refresh_system_prompt(self):
-        self.system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
-            self.category_list_expression,
+
+    @property
+    def system_prompt(self):
+        return SYSTEM_PROMPT_TEMPLATE.format(
             self.max_categories,
+            self.category_list_expression,
             self.no_match_code
         )
 
@@ -141,7 +130,7 @@ class Classifier(ToolBase):
         st.markdown(self.system_prompt)
         
     def show_settings(self):
-        self.input_type = st.selectbox(
+        self.input_type = st.radio(
             "Input",
             options=self.formats
         )
@@ -164,8 +153,6 @@ class Classifier(ToolBase):
                                               format_func=lambda x: self.categories_dic[x],
                                               help="Wählen Sie den Code, der zurückgegeben wird, wenn keine Übereinstimmung gefunden wurde."
                                         )
-
-            self.refresh_system_prompt()
             self.preview_data()
             
         else:
@@ -289,18 +276,8 @@ class Classifier(ToolBase):
                 # if loop has failed 3 times quit
                 if len(self.errors) == MAX_ERRORS:
                     break
-            cost_tokens_in = (
-                MODEL_TOKEN_PRICING[self.model]["in"] * self.tokens_in / 1000
-            )
-            cost_tokens_out = (
-                MODEL_TOKEN_PRICING[self.model]["out"] * self.tokens_out / 1000
-            )
-            placeholder.markdown(
-                f"""Tokens in: {self.tokens_in} Cost: ${cost_tokens_in: .2f}\n
-                    Tokens out: {self.tokens_out} Cost: ${cost_tokens_out: .2f}\n
-                    Total tokens: {self.tokens_in + self.tokens_out} Cost: ${(cost_tokens_in + cost_tokens_out): .2f}
-                """
-            )
+
+            placeholder.markdown(self.token_use_expression(tokens))
             self.stats_df = self.calc_stats()
             self.show_stats()
             file_names = [

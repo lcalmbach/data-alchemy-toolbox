@@ -2,7 +2,7 @@
 import streamlit as st
 import os
 from tools.tool_base import ToolBase
-from moviepy.editor import *
+from moviepy.editor import VideoFileClip
 import openai
 import json
 import pyperclip
@@ -12,7 +12,7 @@ openai.api_key = get_var("OPENAI_API_KEY")
 
 class Speech2Text(ToolBase):
     def __init__(self, logger):
-        self.logger = logger
+        super().__init__(logger)
         self.title = "Audio zu Text"
         self.formats = ['Demo', 'Audio/Video Datei', 'Sammlung von Audio-Dateien (zip)']
         self.script_name, script_extension = os.path.splitext(__file__)
@@ -31,15 +31,14 @@ class Speech2Text(ToolBase):
             self.file = AUDIO_DEMO_FILE
             st.audio(AUDIO_DEMO_FILE)
 
-    def extract_audio_from_video(self, video_file:str)-> str:
+    def extract_audio_from_video(self, video_file: str) -> str:
         audio_file_name = video_file.name.split('.')[0] + '.mp3'
         video = VideoFileClip(video_file)
         audio = video.audio
         audio.write_audiofile(audio_file_name)
         return audio_file_name
 
-    def transcribe(self, filename):
-        
+    def transcribe(self, filename: str) -> str:
         if filename.endswith('.mp4'):
             audio_file_name = self.extract_audio_from_video(filename)
         elif filename.endswith('.zip'):
@@ -55,7 +54,6 @@ class Speech2Text(ToolBase):
 
     def run(self):
         if st.button("Transkribieren"):
-            self.text = ''
             with st.spinner("Transkribiere Audio..."):
                 self.text = self.transcribe(self.file)
 
@@ -66,7 +64,7 @@ class Speech2Text(ToolBase):
                 if st.button("📋 Text in Zwischenablage kopieren"):
                     pyperclip.copy(self.text,)
             with cols[1]:
-                btn = st.download_button(
+                st.download_button(
                     label='⬇️ Datei herunterladen',
                     data=self.text,
                     file_name="download.zip",
