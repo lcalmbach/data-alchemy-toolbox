@@ -10,6 +10,7 @@ Die DataAlchemy Toolbox (DATx) ist eine Sammlung von Werkzeugen für die Verarbe
 | Übersetzung von Texten | 🚧 |
 | Zusammenfassung von Texten aus Text- oder PDF-Dateien | 🚧 |
 | Umwandlung von PDF-Dateien zu Text | 🚧✅ |
+| Der PDF Chatbot beantwortet Fragen zu einem geladenen Dokument | 🚧✅ |
 </br>
 
 | **Legende Verfügbarkeit:** | |
@@ -17,4 +18,4 @@ Die DataAlchemy Toolbox (DATx) ist eine Sammlung von Werkzeugen für die Verarbe
 | 🚧 | Im Aufbau, funktioniert nur marginal |
 | 🚧✅ | läuft nur im Demo Mode |
 | ✅ | Alle Optionen implementiert |
-| ✅✅ | Fertig implementiert und getestet |
+| ✅✅ | Implementiert und getestet |

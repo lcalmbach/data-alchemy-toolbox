@@ -1,0 +1,1 @@
+**PDF-Chat** Erlaubt es dir mit Anfragen über den Inhalt einer PDF-Dokumenten-Sammlung zu stellen.

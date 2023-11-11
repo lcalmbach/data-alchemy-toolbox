@@ -4,7 +4,7 @@ import openai
 import re
 import time
 import json
-from helper import (get_var)
+from helper import get_var
 
 MAX_ERRORS = 3
 LLM_RETRIES = 3
@@ -32,7 +32,7 @@ class ToolBase:
             "Model",
             options=MODEL_OPTIONS,
             index=0,
-            help="Wählen Sie das LLM Modell, das Sie verwenden möchten."
+            help="Wählen Sie das LLM Modell, das Sie verwenden möchten.",
         )
 
     def get_intro(self):
@@ -42,17 +42,13 @@ class ToolBase:
         Returns:
         str: The markdown content of the file.
         """
-        with open(f'{self.script_name}.md', 'r', encoding='utf-8') as file:
+        with open(f"{self.script_name}.md", "r", encoding="utf-8") as file:
             markdown_content = file.read()
         return markdown_content
 
     def token_use_expression(self, tokens: list):
-        cost_tokens_in = (
-                MODEL_TOKEN_PRICING[self.model]["in"] * tokens[0] / 1000
-            )
-        cost_tokens_out = (
-            MODEL_TOKEN_PRICING[self.model]["out"] * tokens[1] / 1000
-        )
+        cost_tokens_in = MODEL_TOKEN_PRICING[self.model]["in"] * tokens[0] / 1000
+        cost_tokens_out = MODEL_TOKEN_PRICING[self.model]["out"] * tokens[1] / 1000
         return f"""
             Tokens in: {tokens[0]} Kosten: ${cost_tokens_in: .2f}\n
             Tokens out: {tokens[1]} Kosten: ${cost_tokens_out: .2f}\n
@@ -103,13 +99,13 @@ class ToolBase:
 
     def show_ui(self):
         """
-        Displays the user interface for the tool, which includes three tabs: 
-        'Input and Settings', 'Run', and 'Information'. The 'Input and Settings' 
-        tab displays the tool's settings, the 'Run' tab executes the tool, and the 
+        Displays the user interface for the tool, which includes three tabs:
+        'Input and Settings', 'Run', and 'Information'. The 'Input and Settings'
+        tab displays the tool's settings, the 'Run' tab executes the tool, and the
         'Information' tab displays introductory text about the tool.
         """
         st.subheader(self.title)
-        tabs = st.tabs(['⚙️Input und Einstellungen', '🚀Ausführen', '💁Informationen'])
+        tabs = st.tabs(["⚙️Input und Einstellungen", "🚀Ausführen", "💁Informationen"])
         with tabs[0]:
             self.show_settings()
         with tabs[1]:

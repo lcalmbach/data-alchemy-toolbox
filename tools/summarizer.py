@@ -1,15 +1,14 @@
-
 import streamlit as st
 import time
 import openai
 import os
-from helper import (create_file, append_row, zip_files, get_var)
+from helper import create_file, append_row, zip_files, get_var
 from tools.tool_base import ToolBase, MODEL_OPTIONS
 
 
-DEMO_FILE = './data/demo/demo_summary.txt'
+DEMO_FILE = "./data/demo/demo_summary.txt"
 SYSTEM_PROMPT_TEMPLATE = "You will be provided with a text. Your task is to summarize the text. The summary should contain a maximum of {}"
-LIMIT_OPTIONS = ["Zeichen", "Tokens", 'Sätze']
+LIMIT_OPTIONS = ["Zeichen", "Tokens", "Sätze"]
 
 
 class Summary(ToolBase):
@@ -19,10 +18,10 @@ class Summary(ToolBase):
         self.title = "Zusammenfassung"
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
-        self.formats = ['Demo', 'zip Datei']
+        self.formats = ["Demo", "zip Datei"]
         self.limit_type = LIMIT_OPTIONS[0]
         self.limit_number = 500
-        with open(DEMO_FILE, 'r', encoding='utf8') as file:
+        with open(DEMO_FILE, "r", encoding="utf8") as file:
             self.text = file.read()
 
     @property
@@ -32,7 +31,7 @@ class Summary(ToolBase):
 
     def show_settings(self):
         self.model = self.get_model()
-        st.markdown('Begrenze die Zusammenfassung auf')
+        st.markdown("Begrenze die Zusammenfassung auf")
         cols = st.columns([1, 1, 4])
         with cols[0]:
             self.limit_number = st.number_input(
@@ -47,24 +46,21 @@ class Summary(ToolBase):
                 "Typ",
                 options=LIMIT_OPTIONS,
                 index=0,
-                help="Wähle die Einheit der Limite, die du verwenden möchtest."
+                help="Wähle die Einheit der Limite, die du verwenden möchtest.",
             )
-        self.input_type = st.selectbox(
-            "Input Format",
-            options=self.formats
-        )
+        self.input_type = st.selectbox("Input Format", options=self.formats)
 
         if self.formats.index(self.input_type) == 0:
             self.text = st.text_area(
                 "Text",
                 value=self.text,
                 height=400,
-                help="Geben Sie den Text ein, den Sie zusammenfassen möchten."
+                help="Geben Sie den Text ein, den Sie zusammenfassen möchten.",
             )
-            
+
         else:
             st.warning("Diese Option wird noch nicht unterstützt.")
-    
+
     def run(self):
         if st.button("Zusammenfassung"):
             with st.spinner("Generiere Zusammenfassung..."):

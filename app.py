@@ -9,12 +9,13 @@ from tools import (
     anonymizer,
     intro,
     pdf2text,
+    pdfchat
 )
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2023-11-10"
+VERSION_DATE = "2023-11-11"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
@@ -54,15 +55,16 @@ def main():
         "Speech2Text",
         "Zusammenfassung",
         "Übersetzung",
-        "pdf2txt",
+        "PDF2TXT",
+        "PDF-Chatbot"
     ]
     with st.sidebar:
         st.markdown(f"## {MY_EMOJI} {MY_NAME}")
-        # https://fonts.google.com/icons
+        # bootstrap icons: https://icons.getbootstrap.com/icons/arrows-angle-contract/
         menu_action = option_menu(
             None,
             menu_options,
-            icons=["info", "table", "search", "database"],
+            icons=["house", "person", "arrows-fullscreen", "mic-fill", "arrows-angle-contract", "globe", "file-earmark-pdf","chat"],
             menu_icon="cast",
             default_index=0,
         )
@@ -95,6 +97,10 @@ def main():
         if "pdf2text" not in st.session_state:
             st.session_state["pdf2text"] = pdf2text.Pdf2Text(logger)
         app = st.session_state["pdf2text"]
+    elif menu_action == menu_options[7]:
+        if "pdfchat" not in st.session_state:
+            st.session_state["pdfchat"] = pdfchat.PdfChat(logger)
+        app = st.session_state["pdfchat"]
     app.show_ui()
     show_info_box()
 

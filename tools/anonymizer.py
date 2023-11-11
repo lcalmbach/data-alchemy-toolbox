@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import os
@@ -12,7 +11,7 @@ from presidio_analyzer import (
     RecognizerRegistry,
     Pattern,
     PatternRecognizer,
-    predefined_recognizers
+    predefined_recognizers,
 )
 from presidio_analyzer.nlp_engine import (
     NlpArtifacts,
@@ -27,6 +26,7 @@ except ImportError:
     print("Flair is not installed")
 
 from helper import zip_files
+
 
 class FlairRecognizer(EntityRecognizer):
     """
@@ -58,7 +58,7 @@ class FlairRecognizer(EntityRecognizer):
         "LOCATION",
         "PERSON",
         "ORGANIZATION",
-    #    "MISCELLANEOUS",   # - There are no direct correlation with Presidio entities.
+        #    "MISCELLANEOUS",   # - There are no direct correlation with Presidio entities.
     ]
 
     DEFAULT_EXPLANATION = "Identified as {} by Flair's Named Entity Recognition"
@@ -67,7 +67,7 @@ class FlairRecognizer(EntityRecognizer):
         ({"LOCATION"}, {"LOC", "LOCATION"}),
         ({"PERSON"}, {"PER", "PERSON"}),
         ({"ORGANIZATION"}, {"ORG"}),
-    #    ({"MISCELLANEOUS"}, {"MISC"}), # Probably not PII
+        #    ({"MISCELLANEOUS"}, {"MISC"}), # Probably not PII
     ]
 
     MODEL_LANGUAGES = {
@@ -98,7 +98,7 @@ class FlairRecognizer(EntityRecognizer):
             model
             if model
             else SequenceTagger.load(self.MODEL_LANGUAGES.get(supported_language))
-            #else SequenceTagger.load("flair/ner-german")
+            # else SequenceTagger.load("flair/ner-german")
         )
 
         super().__init__(
@@ -209,42 +209,82 @@ class Anonymizer(ToolBase):
         super().__init__(logger)
         self.title = "Anonymisierung"
         self.texts_df = pd.DataFrame()
-        self.formats = ["Demo", "csv-Datai", "json-Datei", "Dokumentensammlung txt (gezippt)"]
+        self.formats = [
+            "Demo",
+            "csv-Datai",
+            "json-Datei",
+            "Dokumentensammlung txt (gezippt)",
+        ]
         self.separator = ";"
         self.white_list = []
-        self.demo_white_list = ["Parkinson", "EL", "Ambu", "NAZ", "RTW", "NAz", "FU", "VU", "Schwäche", "Pat.",
-              "Pat", "AZ", "SZ", "REGA", "Rega", "NWS", "CA", "Hirn", "USB", "RQW", "PVK",
-              "Schulter", "Schwindel", "Kopf", "NFS", "Ileus", "SBB", "UPK", "O2", "Nierenkolik",
-              "Abszess", "Clara NFS", "CRB", "BD","HWI"]
+        self.demo_white_list = [
+            "Parkinson",
+            "EL",
+            "Ambu",
+            "NAZ",
+            "RTW",
+            "NAz",
+            "FU",
+            "VU",
+            "Schwäche",
+            "Pat.",
+            "Pat",
+            "AZ",
+            "SZ",
+            "REGA",
+            "Rega",
+            "NWS",
+            "CA",
+            "Hirn",
+            "USB",
+            "RQW",
+            "PVK",
+            "Schulter",
+            "Schwindel",
+            "Kopf",
+            "NFS",
+            "Ileus",
+            "SBB",
+            "UPK",
+            "O2",
+            "Nierenkolik",
+            "Abszess",
+            "Clara NFS",
+            "CRB",
+            "BD",
+            "HWI",
+        ]
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
 
     def show_settings(self):
         self.input_type = st.radio(
-            "Format deines Input für die Anonymisierung",
-            options=self.formats
+            "Format deines Input für die Anonymisierung", options=self.formats
         )
         if self.formats.index(self.input_type) == 0:
             self.text = st.text_area(
                 label="Text eingeben",
                 value="Hans Muster und Susanne Sorglas rufen Zusammen die Nummer 079 173 1111. Sie biegen in die Haupstrasse 22 in Riehen ab, am Montag den 23. Juli",
-                height=300
+                height=300,
             )
             self.white_list = self.demo_white_list
         else:
-            file = st.file_uploader('Datei hochladen')
+            file = st.file_uploader("Datei hochladen")
             if file:
-                st.success('Datei erfolgreich hochgeladen!')
-        
-        file = st.file_uploader('Whitelist hochladen', help="Wörter die nicht anonymisiert werden sollen. Einfache Textdatei mit einem Wort pro Zeile")
-        if file:
-            st.success('Whitelist erfolgreich hochgeladen!')
-        self.white_list = st.multiselect(
-            label="Wörter die nicht anonymisiert werden sollen", 
-            options=self.white_list,
-            default=self.white_list
+                st.success("Datei erfolgreich hochgeladen!")
+
+        file = st.file_uploader(
+            "Whitelist hochladen",
+            help="Wörter die nicht anonymisiert werden sollen. Einfache Textdatei mit einem Wort pro Zeile",
         )
-    
+        if file:
+            st.success("Whitelist erfolgreich hochgeladen!")
+        self.white_list = st.multiselect(
+            label="Wörter die nicht anonymisiert werden sollen",
+            options=self.white_list,
+            default=self.white_list,
+        )
+
     def run(self):
         if st.button("Starten", disabled=True):
             with st.spinner("Anonymisierung wird initialisiert..."):
@@ -263,33 +303,47 @@ class Anonymizer(ToolBase):
                 registry = RecognizerRegistry()
                 registry.load_predefined_recognizers()
                 phone_recognizer_ch = predefined_recognizers.PhoneRecognizer(
-                    supported_language="de", supported_regions=("US", "UK", "DE", "FR", "IT", "CH")
+                    supported_language="de",
+                    supported_regions=("US", "UK", "DE", "FR", "IT", "CH"),
                 )
-                birthday_recognizer_ch = predefined_recognizers.DateRecognizer(context=["birthday"], supported_language="de")
+                birthday_recognizer_ch = predefined_recognizers.DateRecognizer(
+                    context=["birthday"], supported_language="de"
+                )
                 registry.add_recognizer(flair_recognizer_en)
                 registry.add_recognizer(flair_recognizer_de)
                 registry.add_recognizer(phone_recognizer_ch)
                 registry.add_recognizer(birthday_recognizer_ch)
-                
+
                 provider = NlpEngineProvider(nlp_configuration=configuration)
                 nlp_engine_with_german = provider.create_engine()
-                analyzer = AnalyzerEngine(nlp_engine=nlp_engine_with_german, registry=registry, supported_languages=["de", "en"])
-            
+                analyzer = AnalyzerEngine(
+                    nlp_engine=nlp_engine_with_german,
+                    registry=registry,
+                    supported_languages=["de", "en"],
+                )
+
             with st.spinner("Anonymisierung ist gestartet..."):
                 cols = st.columns([4, 1, 4])
                 results = analyzer.analyze(
                     self.text,
                     language="de",
                     return_decision_process=True,
-                    allow_list=self.white_list
+                    allow_list=self.white_list,
                 )
-                self.text_result = engine.anonymize(text=self.text, analyzer_results=results).text
+                self.text_result = engine.anonymize(
+                    text=self.text, analyzer_results=results
+                ).text
                 with cols[0]:
                     st.write("**Input**")
                     st.write(self.text)
                 with cols[2]:
                     st.write("**Output**")
-                    st.download_button(label="Download", data=self.text_result, file_name="anonymisiert.txt", mime="text/plain")
+                    st.download_button(
+                        label="Download",
+                        data=self.text_result,
+                        file_name="anonymisiert.txt",
+                        mime="text/plain",
+                    )
                     file_names = [
                         self.output_file_long,
                         self.output_file_short,
@@ -298,12 +352,10 @@ class Anonymizer(ToolBase):
                     ]
                     zip_files(file_names, self.output_file_zip)
                     with open(classifier.output_file_zip, "rb") as fp:
-                                        btn = st.download_button(
-                                            label=lang['download_results'],
-                                            data=fp,
-                                            file_name="download.zip",
-                                            mime="application/zip",
-                                            help=lang['download_help_text']
-                                        )
-                
-
+                        btn = st.download_button(
+                            label=lang["download_results"],
+                            data=fp,
+                            file_name="download.zip",
+                            mime="application/zip",
+                            help=lang["download_help_text"],
+                        )

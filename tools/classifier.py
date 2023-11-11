@@ -1,4 +1,3 @@
-
 import streamlit as st
 import time
 import openai
@@ -15,7 +14,7 @@ import json
 import re
 import pandas as pd
 import altair as alt
-from helper import (create_file, append_row, zip_files, get_var)
+from helper import create_file, append_row, zip_files, get_var
 
 
 OUTPUT_LONG = "./data/output/output_{}.csv"
@@ -48,8 +47,8 @@ class Classifier(ToolBase):
         self.stats_df = pd.DataFrame()
         self.errors = []
         self.category_list_expression = ""
-        
-        self.formats = ['Demo', 'Upload csv/xlsx', 'Interaktive Eingabe']
+
+        self.formats = ["Demo", "Upload csv/xlsx", "Interaktive Eingabe"]
         self.input_type = self.formats[0]
         self.no_match_code = -99
         self.no_match_code_options = []
@@ -62,7 +61,7 @@ class Classifier(ToolBase):
         self.output_file_stat = OUTPUT_STAT.format(self.key)
         self.output_errors = OUTPUT_ERROR.format(self.key)
         self.output_file_zip = OUTPUT_ZIP.format(self.key)
-        
+
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
 
@@ -89,9 +88,7 @@ class Classifier(ToolBase):
     @property
     def system_prompt(self):
         return SYSTEM_PROMPT_TEMPLATE.format(
-            self.max_categories,
-            self.category_list_expression,
-            self.no_match_code
+            self.max_categories, self.category_list_expression, self.no_match_code
         )
 
     def calc_stats(self):
@@ -117,7 +114,7 @@ class Classifier(ToolBase):
         agg_df["cat_code"] = agg_df["cat_id"].apply(lambda x: self.categories_dic[x])
         agg_df.to_csv(self.output_file_stat, sep=";")
         return agg_df
-    
+
     def preview_data(self):
         """
         Display a preview of the texts dataframe and categories dictionary using Streamlit expanders and tables.
@@ -128,19 +125,18 @@ class Classifier(ToolBase):
             st.dataframe(self.categories_dic)
         st.markdown("**System Prompt**")
         st.markdown(self.system_prompt)
-        
+
     def show_settings(self):
-        self.input_type = st.radio(
-            "Input",
-            options=self.formats
-        )
-        
+        self.input_type = st.radio("Input", options=self.formats)
+
         if self.formats.index(self.input_type) == 0:
-            self.texts_df = pd.read_excel('./data/demo/demo_texts.xlsx')
-            self.texts_df.columns = ['text_id', 'text']
-            categories_df = pd.read_excel('./data/demo/demo_categories.xlsx')
-            categories_df.columns = ['cat_id', 'text']
-            self.categories_dic = dict(zip(categories_df['cat_id'], categories_df['text']))
+            self.texts_df = pd.read_excel("./data/demo/demo_texts.xlsx")
+            self.texts_df.columns = ["text_id", "text"]
+            categories_df = pd.read_excel("./data/demo/demo_categories.xlsx")
+            categories_df.columns = ["cat_id", "text"]
+            self.categories_dic = dict(
+                zip(categories_df["cat_id"], categories_df["text"])
+            )
             self.max_categories = st.number_input(
                 "Maximale Anzahl Kategorien",
                 min_value=1,
@@ -148,13 +144,14 @@ class Classifier(ToolBase):
                 value=3,
                 step=1,
             )
-            self.no_match_code = st.selectbox("Code für keine Übereinstimmung", 
-                                              options=self.categories_dic.keys(),
-                                              format_func=lambda x: self.categories_dic[x],
-                                              help="Wählen Sie den Code, der zurückgegeben wird, wenn keine Übereinstimmung gefunden wurde."
-                                        )
+            self.no_match_code = st.selectbox(
+                "Code für keine Übereinstimmung",
+                options=self.categories_dic.keys(),
+                format_func=lambda x: self.categories_dic[x],
+                help="Wählen Sie den Code, der zurückgegeben wird, wenn keine Übereinstimmung gefunden wurde.",
+            )
             self.preview_data()
-            
+
         else:
             st.warning("Diese Option wird noch nicht unterstützt.")
 
@@ -224,7 +221,7 @@ class Classifier(ToolBase):
                 retries -= 1
                 time.sleep(SLEEP_TIME_AFTER_ERROR)
         return [], 0
-    
+
     def run(self):
         """
         Runs the GPT-3 API on each row of the input DataFrame and categorizes
@@ -255,15 +252,17 @@ class Classifier(ToolBase):
                     .replace(";", " ")
                 )
                 placeholder.write(
-                        f"Classify {cnt}/{len(self.texts_df)}: {text[:50] + '...'}, index= {index}"
-                    )
+                    f"Classify {cnt}/{len(self.texts_df)}: {text[:50] + '...'}, index= {index}"
+                )
                 indices, tokens = self.get_completion(text, index)
                 if len(indices) > 0:
                     placeholder.write(
                         f"Result {cnt}/{len(self.texts_df)}: {text[:50] + '...'}, index= {index}, output: {indices} "
                     )
                     append_row(self.output_file_long, [[index, text, str(indices)]])
-                    append_row(self.output_file_short, [(index, item) for item in indices])
+                    append_row(
+                        self.output_file_short, [(index, item) for item in indices]
+                    )
                     self.tokens_in += tokens[0]
                     self.tokens_out += tokens[1]
                     cnt += 1
