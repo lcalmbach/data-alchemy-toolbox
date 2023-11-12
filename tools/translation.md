@@ -1,3 +1,4 @@
-**Lost in translation**
+**Übersetzung** ermöglicht die Übersetzung von Texten und Dokumenten in eine Vielzahl von Zielsprachen. Ein wesentlicher Vorteil gegenüber bekannten kommerziellen Übersetzungsdiensten ist die Möglichkeit, durch die Wahl eines geeigneten Sprachmodells Datenschutz- und Sicherheitsanforderungen für sensible Inhalte zu erfüllen. Die derzeitige Version nutzt allerdings noch die OpenAI Whisper API, welche diese spezifischen Schutzbedingungen noch nicht vollständig erfüllt. Mit vollständiger Kontrolle über den Übersetzungsprozess lassen sich sowohl Eingabe- als auch Ausgabedaten gemäß den spezifischen Anforderungen der Anwendung anpassen. So können beispielsweise i18n JSON-Dateien direkt als Input und Output verwendet werden, etwa im i18next JSON-Format.
 
-ipse lorum dolor sit amet 
+Anwendungsmöglichkeiten:
+- Übersetzung von Texten für Programme oder Websites, wobei spezielle Ausgabeformate wie JSON unterstützt werden.

@@ -30,21 +30,23 @@ class PdfChat(ToolBase):
 
     def show_ui(self):
         doc_options = self.get_demo_documents()
-        document  = st.selectbox(
-                label="Wähle ein Dokument aus",
-                options=doc_options.keys(),
-                format_func=lambda x: doc_options[x]
+        document = st.selectbox(
+            label="Wähle ein Dokument aus",
+            options=doc_options.keys(),
+            format_func=lambda x: doc_options[x],
         )
 
         pdf_loader = PyPDFLoader(str(DEMO_PATH / document))
         documents = pdf_loader.load()
         llm = OpenAI()
-        chain = load_qa_chain(llm, verbose=True) 
+        chain = load_qa_chain(llm, verbose=True)
 
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
-        if prompt := st.chat_input(f"Stelle eine Frage zum Dokument '{doc_options[document]}'"):
+        if prompt := st.chat_input(
+            f"Stelle eine Frage zum Dokument '{doc_options[document]}'"
+        ):
             st.session_state.messages.append({"role": "user", "content": prompt})
             response = chain.run(input_documents=documents, question=prompt)
             st.session_state.messages.append({"role": "assistant", "content": response})

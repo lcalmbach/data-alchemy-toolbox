@@ -1,5 +1,11 @@
-**pdf2text** erlaubt es ein, oder eine Sammlung von PDF-Dokumente in Text-Dateien umzuwandeln. Die extrahierten Textdateien werden in einer ZIP-Datei zurückgegeben. 
+**pdf2text**: Umwandlung von PDF-Dokumenten in Text-Dateien
 
-Überprüfe zuerst die Einstellungen unter dem Menüpunkt **⚙️Einstellungen**. Anschliessend lade eine oder mehre Dateien hoch. Du kannst auch mehrere Dateien in eine ZIP-Datei verpacken. Allerings darf die gezippte Datei nicht grösser als 100 MB gross sein. 
+Die Funktion **pdf2text** ermöglicht die Umwandlung von PDF-Dokumenten in Textdateien. Dies gilt sowohl für einzelne PDF-Dokumente als auch für Sammlungen von PDFs. Die extrahierten Texte werden in einer ZIP-Datei zur Verfügung gestellt.
 
-Die ZIP-Datei kann mit dem Download-Button heruntergeladen werden. Die Textdateien werden in einer ZIP-Datei als eine oder mehrere Textdateien zurückgegeben. Die Textdateien haben den gleichen Namen wie die Original-PDF-Dateien, mit der Extension .txt.
+Bitte überprüfe zuerst die erforderlichen Einstellungen unter dem Menüpunkt **⚙️ Einstellungen**. Anschließend kannst du eine oder mehrere PDF-Dateien hochladen. Es ist auch möglich, mehrere Dateien in eine einzige ZIP-Datei zu komprimieren. Beachte jedoch, dass die Größe der ZIP-Datei 100 MB nicht überschreiten darf.
+
+Nach der Verarbeitung kannst du die resultierende ZIP-Datei mit dem Download-Button herunterladen. Die darin enthaltenen Textdateien tragen die gleichen Namen wie die ursprünglichen PDF-Dokumente, jedoch mit der Endung .txt.
+
+Anwendungsmöglichkeiten:
+- Integration in Prozessketten zur Verarbeitung von PDF-Dokumenten, beispielsweise als Vorstufe für die Indexierung von und Suche in Dokumentensammlungen.
+- Unterstützung bei der Erstellung von Zusammenfassungen oder bei der Übersetzung von Dokumenten.

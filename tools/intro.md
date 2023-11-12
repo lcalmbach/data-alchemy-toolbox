@@ -1,21 +1,23 @@
 ## Willkommen in der DataAlchemy-Toolbox
 
-Die DataAlchemy Toolbox (DATx) ist eine Sammlung von Werkzeugen für die Verarbeitung von unstrukturierten Daten, sowie für Methoden, die für die Aufbereitung von unstrukturierten Daten nötig sind. Die einzelnen Werkzeuge, die zur Verfügung stehen sowie deren Verfügbarkeit sind in der folgenden Tabelle aufgelistet. Diese Werkzeuge werden laufend erweitert und verbessert.
+Die DataAlchemy Toolbox (DATx) ist eine umfassende Sammlung von Werkzeugen zur Verarbeitung unstrukturierter Daten. Sie umfasst Methoden, die für die Aufbereitung dieser Daten notwendig sind. Die Verfügbarkeit und die Eigenschaften der einzelnen Werkzeuge sind in der nachstehenden Tabelle dargestellt. Die Toolbox wird kontinuierlich erweitert und verbessert.
+
+Bitte beachten Sie, dass diese Applikation darauf abzielt, die Möglichkeiten verschiedener Large Language Model (LLM)-Technologien zu demonstrieren. Jedes Werkzeug ist so konzipiert, dass es sowohl eigenständig als auch in einen bestehenden Prozess integriert verwendet werden kann.
 
 | Funktionen | Verfügbarkeit |
 |------------|---------------|
-| Anonymisierung von Texten z.B. damit du die Texte anschliessend in der Cloud mit LLM-Technologien bearbeiten kannst | 🚧 |
+| Anonymisierung von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien | 🚧 |
 | Klassifizierung von Texten nach vorgegebenen Kategorien | 🚧✅ |
 | Umwandlung von Audio-Dateien in Text | 🚧✅ |
 | Übersetzung von Texten | 🚧 |
 | Zusammenfassung von Texten aus Text- oder PDF-Dateien | 🚧 |
-| Umwandlung von PDF-Dateien zu Text | 🚧✅ |
-| Der PDF Chatbot beantwortet Fragen zu einem geladenen Dokument | 🚧✅ |
+| Umwandlung von PDF-Dateien in Text | 🚧✅ |
+| Der PDF Chatbot, der Fragen zu einem geladenen Dokument beantwortet | 🚧✅ |
 </br>
 
-| **Legende Verfügbarkeit:** | |
-|------------|---------------|
-| 🚧 | Im Aufbau, funktioniert nur marginal |
-| 🚧✅ | läuft nur im Demo Mode |
-| ✅ | Alle Optionen implementiert |
-| ✅✅ | Implementiert und getestet |
+| **Legende zur Verfügbarkeit:** | |
+|----------------------------|---|
+| 🚧 | Im Aufbau, eingeschränkt funktionsfähig |
+| 🚧✅ | Verfügbar nur im Demo-Modus |
+| ✅ | Alle Funktionen implementiert |
+| ✅✅ | Implementiert und umfassend getestet |

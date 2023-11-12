@@ -33,10 +33,10 @@ class PdfChat(ToolBase):
 
     def show_ui(self):
         doc_options = self.get_demo_documents()
-        document  = st.selectbox(
-                label="Wähle ein Dokument aus",
-                options=doc_options.keys(),
-                format_func=lambda x: doc_options[x]
+        document = st.selectbox(
+            label="Wähle ein Dokument aus",
+            options=doc_options.keys(),
+            format_func=lambda x: doc_options[x],
         )
 
         pdf_loader = PyPDFLoader(str(DEMO_PATH / document))
@@ -45,25 +45,24 @@ class PdfChat(ToolBase):
         text_splitter = CharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
         documents = text_splitter.split_documents(documents)
         vectordb = Chroma.from_documents(
-            documents,
-            embedding=OpenAIEmbeddings(),
-            persist_directory='./data'
+            documents, embedding=OpenAIEmbeddings(), persist_directory="./data"
         )
         vectordb.persist()
 
         qa_chain = RetrievalQA.from_chain_type(
             llm=OpenAI(),
-            retriever=vectordb.as_retriever(search_kwargs={'k': 7}),
-                return_source_documents=True
+            retriever=vectordb.as_retriever(search_kwargs={"k": 7}),
+            return_source_documents=True,
         )
-
 
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
-        if prompt := st.chat_input(f"Stelle eine Frage zum Dokument '{doc_options[document]}'"):
+        if prompt := st.chat_input(
+            f"Stelle eine Frage zum Dokument '{doc_options[document]}'"
+        ):
             st.session_state.messages.append({"role": "user", "content": prompt})
-            response = qa_chain({'query': prompt})
+            response = qa_chain({"query": prompt})
             st.session_state.messages.append({"role": "assistant", "content": response})
 
         for msg in st.session_state.messages:
