@@ -1,13 +1,31 @@
-from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import WebBaseLoader
-from langchain.document_loaders import PyPDFLoader
-from langchain.chains.summarize import load_summarize_chain
+from openai import OpenAI
+import pandas as pd
+import streamlit as st
 
-loader = WebBaseLoader("https://lilianweng.github.io/posts/2023-06-23-agent/")
-docs = loader.load()
 
-llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo-16k")
-chain = load_summarize_chain(llm, chain_type="stuff")
+images = pd.read_csv("./data/demo/images.csv")
+images.columns = ["url"]
+client = OpenAI()
 
-chain.run(docs)
-
+url_root = "https://images-datbx.s3.eu-central-1.amazonaws.com/"
+url = f"{url_root}{images.iloc[0]['url']}"
+print(url)
+response = client.chat.completions.create(
+    model="gpt-4-vision-preview",
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What’s in this image?"},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": url,
+                    },
+                },
+            ],
+        }
+    ],
+    max_tokens=300,
+)
+st.write(response.choices[0].message.content)

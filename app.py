@@ -9,20 +9,54 @@ from tools import (
     anonymizer,
     intro,
     pdf2text,
-    pdfchat
+    pdfchat,
+    image2text,
 )
 
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2023-11-11"
+VERSION_DATE = "2023-11-12"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
 APP_URL = "https://data-alchemy-toolbox.streamlit.app/"
 
+menu_dic = {
+    "Übersicht": intro.Intro,
+    "Anonymisierung": anonymizer.Anonymizer,
+    "Klassifizierung": classifier.Classifier,
+    "Speech2Text": speech2text.Speech2Text,
+    "Image2Text": image2text.Image2Text,
+    "Zusammenfassung": summarizer.Summary,
+    "Übersetzung": translation.Translation,
+    "PDF2TXT": pdf2text.Pdf2Text,
+    "PDF-Chatbot": pdfchat.PdfChat,
+}
+
+menu_icons = [
+    "house",
+    "person",
+    "arrows-fullscreen",
+    "mic-fill",
+    "card-image",
+    "arrows-angle-contract",
+    "globe",
+    "file-earmark-pdf",
+    "chat",
+]
+
 
 def show_info_box():
+    """
+    Displays an information box in the sidebar with author information, version number, and a link to the git repository.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
     impressum = f"""<div style="background-color:#34282C; padding: 10px;border-radius: 15px; border:solid 1px white;">
     <small>Autoren: <a href="mailto:{__author_email__}">{__author__}</a><br>
     Version: {__version__} ({VERSION_DATE})<br>
@@ -32,6 +66,14 @@ def show_info_box():
 
 
 def init_layout():
+    """
+    Initializes the layout of the application by setting the page configuration, loading CSS styles, and displaying the
+    logo in the sidebar.
+
+    Returns:
+        None
+    """
+
     def load_css():
         with open("./style.css") as f:
             st.markdown("<style>{}</style>".format(f.read()), unsafe_allow_html=True)
@@ -45,62 +87,40 @@ def init_layout():
     st.sidebar.image("./assets/logo.png", width=150)
 
 
+def check_in_session_state(key: str, logger):
+    """
+    Checks if a given menu-item key is in the session state. If it is not, it
+    initializes the key with a value from the menu dictionary.
+
+    Args:
+        key (str): The key to check in the session state.
+        logger: The logger object to use for logging and passed to the menu-app
+        object.
+
+    Returns:
+        None
+    """
+    if key not in st.session_state:
+        st.session_state[key] = menu_dic[key](logger)
+
+
 def main():
     init_layout()
     logger = logging.getLogger("data-alchemy-toolbox")
-    menu_options = [
-        "Übersicht",
-        "Anonymisierung",
-        "Klassifizierung",
-        "Speech2Text",
-        "Zusammenfassung",
-        "Übersetzung",
-        "PDF2TXT",
-        "PDF-Chatbot"
-    ]
+    menu_options = list(menu_dic.keys())
     with st.sidebar:
         st.markdown(f"## {MY_EMOJI} {MY_NAME}")
         # bootstrap icons: https://icons.getbootstrap.com/icons/arrows-angle-contract/
         menu_action = option_menu(
             None,
             menu_options,
-            icons=["house", "person", "arrows-fullscreen", "mic-fill", "arrows-angle-contract", "globe", "file-earmark-pdf","chat"],
+            icons=menu_icons,
             menu_icon="cast",
             default_index=0,
         )
 
-    if menu_action == menu_options[0]:
-        if "intro" not in st.session_state:
-            st.session_state["intro"] = intro.Intro(logger)
-        app = st.session_state["intro"]
-    elif menu_action == menu_options[1]:
-        if "anonymizer" not in st.session_state:
-            st.session_state["anonymizer"] = anonymizer.Anonymizer(logger)
-        app = st.session_state["anonymizer"]
-    elif menu_action == menu_options[2]:
-        if "classifier" not in st.session_state:
-            st.session_state["classifier"] = classifier.Classifier(logger)
-        app = st.session_state["classifier"]
-    elif menu_action == menu_options[3]:
-        if "speech2text" not in st.session_state:
-            st.session_state["speech2text"] = speech2text.Speech2Text(logger)
-        app = st.session_state["speech2text"]
-    elif menu_action == menu_options[4]:
-        if "summary" not in st.session_state:
-            st.session_state["summary"] = summarizer.Summary(logger)
-        app = st.session_state["summary"]
-    elif menu_action == menu_options[5]:
-        if "translation" not in st.session_state:
-            st.session_state["translation"] = translation.Translation(logger)
-        app = st.session_state["translation"]
-    elif menu_action == menu_options[6]:
-        if "pdf2text" not in st.session_state:
-            st.session_state["pdf2text"] = pdf2text.Pdf2Text(logger)
-        app = st.session_state["pdf2text"]
-    elif menu_action == menu_options[7]:
-        if "pdfchat" not in st.session_state:
-            st.session_state["pdfchat"] = pdfchat.PdfChat(logger)
-        app = st.session_state["pdfchat"]
+    check_in_session_state(menu_action, logger)
+    app = st.session_state[menu_action]
     app.show_ui()
     show_info_box()
 
