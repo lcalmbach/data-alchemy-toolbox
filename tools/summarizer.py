@@ -1,6 +1,5 @@
 import streamlit as st
 import time
-import openai
 import os
 from helper import create_file, append_row, zip_files, get_var
 from tools.tool_base import ToolBase, MODEL_OPTIONS

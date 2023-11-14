@@ -27,6 +27,7 @@ class Translation(ToolBase):
         self.input_type = self.formats[0]
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
+        self.output = None
 
     @property
     def system_prompt(self):
@@ -76,7 +77,7 @@ class Translation(ToolBase):
         return dict(zip(keys, values))
 
     def run(self):
-        if st.button("Zusammenfassung"):
+        if st.button("Übersetzung"):
             with st.spinner("Übersetzung läuft..."):
                 if self.input_type == self.formats[0]:
                     text = USER_PROMPT.format(self.text)
@@ -85,5 +86,6 @@ class Translation(ToolBase):
                 else:
                     st.warning("Diese Option wird noch nicht unterstützt.")
 
-        if self.input_type == self.formats[0]:
+        if (self.input_type == self.formats[0]) & (self.output is not None):
+            st.markdown("**Übersetzung**")
             st.markdown(self.output)

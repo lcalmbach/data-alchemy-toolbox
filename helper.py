@@ -151,6 +151,7 @@ def create_file(file_name: str, columns: list) -> None:
     with open(file_name, "w", newline="") as file:
         writer = csv.writer(file, delimiter=";")
         writer.writerow(columns)
+        print(f"File {file_name} created.")
 
 
 def append_row(file_name: str, row: list) -> None:

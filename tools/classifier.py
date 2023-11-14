@@ -1,6 +1,5 @@
 import streamlit as st
 import time
-import openai
 from datetime import datetime
 from tools.tool_base import (
     ToolBase,
@@ -55,7 +54,7 @@ class Classifier(ToolBase):
         self.max_categories = 10
         self.model = MODEL_OPTIONS[0]
 
-        self.key = f"_{datetime.now().strftime('%Y-%m-%d-%H-%M')}"
+        self.key = f"{datetime.now().strftime('%Y-%m-%d-%H-%M')}"
         self.output_file_long = OUTPUT_LONG.format(self.key)
         self.output_file_short = OUTPUT_SHORT.format(self.key)
         self.output_file_stat = OUTPUT_STAT.format(self.key)
@@ -111,6 +110,11 @@ class Classifier(ToolBase):
             .size()
             .reset_index(name="count")
         )
+        # make sure cat_id is numeric: todo: make sure that this does not happen as the 
+        # cat_id should be assigned to the default unknown category
+        agg_df['cat_id'] = pd.to_numeric(agg_df['cat_id'], errors='coerce')
+        agg_df = agg_df.dropna(subset=['cat_id'])
+
         agg_df["cat_code"] = agg_df["cat_id"].apply(lambda x: self.categories_dic[x])
         agg_df.to_csv(self.output_file_stat, sep=";")
         return agg_df
@@ -167,61 +171,6 @@ class Classifier(ToolBase):
         )
         st.altair_chart(bar_chart, use_container_width=True)
 
-    def get_completion(self, text, index):
-        """Generates a response using the OpenAI ChatCompletion API based on
-        the given text.
-
-        Args:
-            text (str): The user's input.
-
-        Returns:
-            str: The generated response.
-
-        Raises:
-            None
-        """
-
-        def convert_to_list(expression: str):
-            pattern = r"\b\d+\b"
-            # Find all occurrences of the pattern
-            matches = re.findall(pattern, expression)
-            # Convert all matches to integers
-            codes = [int(match) for match in matches]
-            return codes
-
-        openai.api_key = get_var("OPENAI_API_KEY")
-        retries = LLM_RETRIES
-        tokens = []
-        while retries > 0:
-            try:
-                response = openai.ChatCompletion.create(
-                    model=self.model,
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": text},
-                    ],
-                    temperature=self.temperature,
-                    request_timeout=15,
-                    max_tokens=self.max_tokens,
-                    # top_p=self.settings["top_p"],
-                    # frequency_penalty=self.settings["frequency_penalty"],
-                    # presence_penalty=self.settings["presence_penalty"],
-                )
-                tokens.append(response["usage"]["prompt_tokens"])
-                tokens.append(response["usage"]["completion_tokens"])
-                indices = response["choices"][0]["message"]["content"]
-                try:
-                    indices = json.loads(indices)
-                except Exception as err:
-                    print(err)
-                    indices = convert_to_list(indices)
-                return indices, tokens
-            except Exception as err:
-                st.error(f"OpenAIError {err}, Index = {index}")
-                retries -= 1
-                time.sleep(SLEEP_TIME_AFTER_ERROR)
-        return [], 0
-
     def run(self):
         """
         Runs the GPT-3 API on each row of the input DataFrame and categorizes
@@ -250,9 +199,6 @@ class Classifier(ToolBase):
                     .replace(chr(13), " ")
                     .replace(chr(10), " ")
                     .replace(";", " ")
-                )
-                placeholder.write(
-                    f"Classify {cnt}/{len(self.texts_df)}: {text[:50] + '...'}, index= {index}"
                 )
                 indices, tokens = self.get_completion(text, index)
                 if len(indices) > 0:

@@ -2,12 +2,10 @@ import streamlit as st
 import os
 from tools.tool_base import ToolBase
 from moviepy.editor import VideoFileClip
-import openai
+from openai import OpenAI
 import json
 import pyperclip
 from helper import get_var
-
-openai.api_key = get_var("OPENAI_API_KEY")
 
 
 class Speech2Text(ToolBase):
@@ -44,10 +42,17 @@ class Speech2Text(ToolBase):
             audio_file_name = filename
 
         audio_file = open(audio_file_name, "rb")
-        transcript = openai.Audio.transcribe("whisper-1", audio_file)
+        client = OpenAI(
+            api_key=get_var("OPENAI_API_KEY"),
+        )
+        transcript = client.audio.transcriptions.create(
+            model="whisper-1", 
+            file=audio_file, 
+            response_format="text"
+        )
         with open("./audio_output.json", "w") as outfile:
-            json.dump(transcript, outfile, indent=4)
-        return transcript["text"]
+            outfile.write(transcript)
+        return transcript
 
     def run(self):
         if st.button("Transkribieren"):

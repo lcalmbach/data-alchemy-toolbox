@@ -1,10 +1,8 @@
 import streamlit as st
-import os
-import openai
-import re
 import time
-import json
 from helper import get_var
+from openai import OpenAI
+import tiktoken
 
 MAX_ERRORS = 3
 LLM_RETRIES = 3
@@ -55,6 +53,12 @@ class ToolBase:
             Total Tokens: {tokens[0] + tokens[1]} Kosten: ${(cost_tokens_in + cost_tokens_out): .2f}
             """
 
+    def num_tokens_from_string(string: str, encoding_name: str) -> int:
+        """Returns the number of tokens in a text string."""
+        encoding = tiktoken.get_encoding(encoding_name)
+        num_tokens = len(encoding.encode(string))
+        return num_tokens
+        
     def get_completion(self, text, index):
         """Generates a response using the OpenAI ChatCompletion API based on
         the given text.
@@ -68,26 +72,26 @@ class ToolBase:
         Raises:
             None
         """
-
-        openai.api_key = get_var("OPENAI_API_KEY")
+        client = OpenAI(
+            api_key=get_var("OPENAI_API_KEY"),
+        )
         retries = LLM_RETRIES
-        tokens = []
         while retries > 0:
             try:
-                response = openai.ChatCompletion.create(
+                completion = client.chat.completions.create(
                     model=self.model,
                     messages=[
                         {"role": "system", "content": self.system_prompt},
                         {"role": "user", "content": text},
                     ],
                     temperature=self.temperature,
-                    request_timeout=15,
                     max_tokens=self.max_tokens,
                 )
-                tokens.append(response["usage"]["prompt_tokens"])
-                tokens.append(response["usage"]["completion_tokens"])
-                output = response["choices"][0]["message"]["content"]
-                return output, tokens
+                tokens = [
+                    completion.usage.completion_tokens,
+                    completion.usage.prompt_tokens
+                ]
+                return completion.choices[0].message.content, tokens
             except Exception as err:
                 st.error(f"OpenAIError {err}, Index = {index}")
                 retries -= 1
