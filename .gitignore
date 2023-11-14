@@ -1,2 +1,4 @@
 env
 test*.*
+./output/*.csv
+./output/*.csv

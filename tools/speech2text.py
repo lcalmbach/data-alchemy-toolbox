@@ -3,10 +3,11 @@ import os
 from tools.tool_base import ToolBase
 from moviepy.editor import VideoFileClip
 from openai import OpenAI
-import json
 import pyperclip
 from helper import get_var
 
+AUDIO_DEMO_FILE = "./data/demo/demo_audio.mp3"
+OUTPUT_FILE = "./output/audio_output.txt"
 
 class Speech2Text(ToolBase):
     def __init__(self, logger):
@@ -22,7 +23,6 @@ class Speech2Text(ToolBase):
     def show_settings(self):
         self.input_type = st.radio("Input für Speech2Text", options=self.formats)
         if self.formats.index(self.input_type) == 0:
-            AUDIO_DEMO_FILE = "./data/demo/demo_audio.mp3"
             self.file = AUDIO_DEMO_FILE
             st.audio(AUDIO_DEMO_FILE)
 
@@ -46,12 +46,10 @@ class Speech2Text(ToolBase):
             api_key=get_var("OPENAI_API_KEY"),
         )
         transcript = client.audio.transcriptions.create(
-            model="whisper-1", 
-            file=audio_file, 
+            model="whisper-1",
+            file=audio_file,
             response_format="text"
         )
-        with open("./audio_output.json", "w") as outfile:
-            outfile.write(transcript)
         return transcript
 
     def run(self):
@@ -71,6 +69,6 @@ class Speech2Text(ToolBase):
                 st.download_button(
                     label="⬇️ Datei herunterladen",
                     data=self.text,
-                    file_name="download.zip",
+                    file_name=OUTPUT_FILE,
                     mime="text/plain",
                 )
