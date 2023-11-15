@@ -293,7 +293,9 @@ class Anonymizer(ToolBase):
 
     def run(self):
         if (get_hostname() not in DEV_WORKSTATIONS):
-            st.warning("Wir bitten um Entschuldigung. Diese Funktion ist nur auf den Entwickler-Workstations verfügbar. Der Flair recognizer nimmt ca. 2GB Festlplatten Speicher in Anspruch, was die Kapazität auf der aktuellen Cloud-Plattform übersteigt.")
+            st.warning(""""Wir bitten um Entschuldigung. Diese Funktion ist nur auf den Entwickler-Workstations verfügbar. 
+Der Flair recognizer nimmt ca. 2GB Festlplatten Speicher in Anspruch, was die Kapazität auf der aktuellen 
+Cloud-Plattform übersteigt.""")
         elif st.button(
             "Starten",
             disabled=(get_hostname() not in DEV_WORKSTATIONS)

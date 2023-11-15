@@ -6,11 +6,11 @@ Bitte beachten Sie, dass diese Applikation darauf abzielt, die Möglichkeiten ve
 
 | Funktionen | Verfügbarkeit |
 |------------|---------------|
-| Anonymisierung von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien | 🚧 |
-| Klassifizierung von Texten nach vorgegebenen Kategorien | 🚧 (Kaputt, bei Wechsel auf v1.2.3) |
+| Anonymisierung von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien | 🚧✅ |
+| Klassifizierung von Texten nach vorgegebenen Kategorien | 🚧✅ |
 | Umwandlung von Audio-Dateien in Text | 🚧✅ |
-| Übersetzung von Texten | 🚧 |
-| Zusammenfassung von Texten aus Text- oder PDF-Dateien | 🚧 |
+| Übersetzung von Texten | 🚧✅ |
+| Zusammenfassung von Texten aus Text- oder PDF-Dateien | 🚧✅ |
 | Umwandlung von PDF-Dateien in Text | 🚧✅ |
 | Der PDF Chatbot, der Fragen zu einem geladenen Dokument beantwortet | 🚧✅ |
 | Öffnungszeiten Agent (Verwendung von Tools) | 💡 |
