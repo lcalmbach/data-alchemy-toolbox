@@ -110,10 +110,10 @@ class Classifier(ToolBase):
             .size()
             .reset_index(name="count")
         )
-        # make sure cat_id is numeric: todo: make sure that this does not happen as the 
+        # make sure cat_id is numeric: todo: make sure that this does not happen as the
         # cat_id should be assigned to the default unknown category
-        agg_df['cat_id'] = pd.to_numeric(agg_df['cat_id'], errors='coerce')
-        agg_df = agg_df.dropna(subset=['cat_id'])
+        agg_df["cat_id"] = pd.to_numeric(agg_df["cat_id"], errors="coerce")
+        agg_df = agg_df.dropna(subset=["cat_id"])
 
         agg_df["cat_code"] = agg_df["cat_id"].apply(lambda x: self.categories_dic[x])
         agg_df.to_csv(self.output_file_stat, sep=";")

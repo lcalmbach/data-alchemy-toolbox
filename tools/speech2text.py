@@ -9,6 +9,7 @@ from helper import get_var
 AUDIO_DEMO_FILE = "./data/demo/demo_audio.mp3"
 OUTPUT_FILE = "./output/audio_output.txt"
 
+
 class Speech2Text(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
@@ -46,9 +47,7 @@ class Speech2Text(ToolBase):
             api_key=get_var("OPENAI_API_KEY"),
         )
         transcript = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=audio_file,
-            response_format="text"
+            model="whisper-1", file=audio_file, response_format="text"
         )
         return transcript
 

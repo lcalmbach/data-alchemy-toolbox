@@ -58,7 +58,7 @@ class ToolBase:
         encoding = tiktoken.get_encoding(encoding_name)
         num_tokens = len(encoding.encode(string))
         return num_tokens
-        
+
     def get_completion(self, text, index):
         """Generates a response using the OpenAI ChatCompletion API based on
         the given text.
@@ -89,7 +89,7 @@ class ToolBase:
                 )
                 tokens = [
                     completion.usage.completion_tokens,
-                    completion.usage.prompt_tokens
+                    completion.usage.prompt_tokens,
                 ]
                 return completion.choices[0].message.content, tokens
             except Exception as err:

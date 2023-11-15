@@ -98,6 +98,10 @@ def is_valid_json(json_str):
         return False
 
 
+def get_hostname():
+    return socket.gethostname().lower()
+
+
 def get_var(varname: str) -> str:
     """
     Retrieves the value of a given environment variable or secret from the Streamlit configuration.

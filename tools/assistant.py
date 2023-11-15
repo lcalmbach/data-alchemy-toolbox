@@ -18,7 +18,7 @@ User: "Ist das statistische Amt morgen vormittag offen?"
 Assistant: "nein, am Samstag ist das statistische Amt den ganzen Tag geschlossen."
 """
 
-locale.setlocale(locale.LC_TIME, 'de_DE')
+locale.setlocale(locale.LC_TIME, "de_DE")
 
 
 class OpenHourse(ToolBase):
@@ -63,8 +63,12 @@ class OpenHourse(ToolBase):
             },
         ]
 
-    @retry(wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3))
-    def chat_completion_request(self, messages, functions=None, function_call=None, model=GPT_MODEL):
+    @retry(
+        wait=wait_random_exponential(multiplier=1, max=40), stop=stop_after_attempt(3)
+    )
+    def chat_completion_request(
+        self, messages, functions=None, function_call=None, model=GPT_MODEL
+    ):
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + openai.api_key,
@@ -90,9 +94,9 @@ class OpenHourse(ToolBase):
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
-
         if prompt := st.chat_input(
-            "Stelle eine Frage zu den Öffnungszeiten der kantonalen Verwaltung"):
+            "Stelle eine Frage zu den Öffnungszeiten der kantonalen Verwaltung"
+        ):
             st.session_state.messages.append({"role": "user", "content": prompt})
             response = self.chat_completion_request(
                 st.session_state.messages, functions=self.functions

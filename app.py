@@ -13,10 +13,10 @@ from tools import (
     image2text,
 )
 
-__version__ = "0.0.7"
+__version__ = "0.0.8"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2023-11-14"
+VERSION_DATE = "2023-11-15"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"

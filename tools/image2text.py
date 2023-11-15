@@ -15,6 +15,7 @@ class Image2Text(ToolBase):
         self.model = "gpt-4-vision-preview"
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
+        self.text_result = None
 
     def show_settings(self):
         self.input_type = st.radio("Input für Speech2Text", options=self.formats)
@@ -51,5 +52,6 @@ class Image2Text(ToolBase):
         st.image(url)
         if st.button("Bild zu Text"):
             with st.spinner("Bilderkennung läuft..."):
-                response = self.image2text(url)
-                st.text_area("Beschreibung des Bilds", response)
+                self.text_result = self.image2text(url)
+        if self.text_result:
+            st.text_area("Beschreibung des Bilds", self.text_result, height=500)

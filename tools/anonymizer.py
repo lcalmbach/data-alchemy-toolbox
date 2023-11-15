@@ -25,7 +25,10 @@ try:
 except ImportError:
     print("Flair is not installed")
 
-from helper import zip_files
+from helper import zip_files, get_hostname
+from const import DEV_WORKSTATIONS
+
+DEMO_FILENAME = "./data/demo/rapport_4721-b.txt"
 
 
 class FlairRecognizer(EntityRecognizer):
@@ -71,7 +74,7 @@ class FlairRecognizer(EntityRecognizer):
     ]
 
     MODEL_LANGUAGES = {
-        "en": "flair/ner-english-large",
+        # "en": "flair/ner-english-large",
         "de": "flair/ner-german-large",
     }
 
@@ -262,9 +265,12 @@ class Anonymizer(ToolBase):
             "Format deines Input für die Anonymisierung", options=self.formats
         )
         if self.formats.index(self.input_type) == 0:
+
+            with open(DEMO_FILENAME, "r", encoding="utf-8") as f:
+                text = f.read()
             self.text = st.text_area(
                 label="Text eingeben",
-                value="Hans Muster und Susanne Sorglas rufen Zusammen die Nummer 079 173 1111. Sie biegen in die Haupstrasse 22 in Riehen ab, am Montag den 23. Juli",
+                value=text,
                 height=300,
             )
             self.white_list = self.demo_white_list
@@ -286,7 +292,10 @@ class Anonymizer(ToolBase):
         )
 
     def run(self):
-        if st.button("Starten", disabled=True):
+        if st.button(
+            "Starten",
+            # disabled=(get_hostname() not in DEV_WORKSTATIONS)
+        ):
             with st.spinner("Anonymisierung wird initialisiert..."):
                 engine = AnonymizerEngine()
                 configuration = {
@@ -297,7 +306,7 @@ class Anonymizer(ToolBase):
                     ],
                 }
                 flair_recognizer_de = FlairRecognizer(supported_language="de")
-                flair_recognizer_en = FlairRecognizer(supported_language="en")
+                # flair_recognizer_en = FlairRecognizer(supported_language="en")
                 # This would download a very large (+2GB) model on the first run
 
                 registry = RecognizerRegistry()
@@ -309,7 +318,7 @@ class Anonymizer(ToolBase):
                 birthday_recognizer_ch = predefined_recognizers.DateRecognizer(
                     context=["birthday"], supported_language="de"
                 )
-                registry.add_recognizer(flair_recognizer_en)
+                # registry.add_recognizer(flair_recognizer_en)
                 registry.add_recognizer(flair_recognizer_de)
                 registry.add_recognizer(phone_recognizer_ch)
                 registry.add_recognizer(birthday_recognizer_ch)
@@ -319,11 +328,12 @@ class Anonymizer(ToolBase):
                 analyzer = AnalyzerEngine(
                     nlp_engine=nlp_engine_with_german,
                     registry=registry,
-                    supported_languages=["de", "en"],
+                    # supported_languages=["de", "en"],
+                    supported_languages=["de"],
                 )
 
             with st.spinner("Anonymisierung ist gestartet..."):
-                cols = st.columns([4, 1, 4])
+                cols = st.columns([8, 1, 8])
                 results = analyzer.analyze(
                     self.text,
                     language="de",
@@ -333,29 +343,16 @@ class Anonymizer(ToolBase):
                 self.text_result = engine.anonymize(
                     text=self.text, analyzer_results=results
                 ).text
+            if self.text_result:
                 with cols[0]:
                     st.write("**Input**")
-                    st.write(self.text)
+                    st.markdown(self.text)
                 with cols[2]:
                     st.write("**Output**")
+                    st.markdown(self.text_result)
                     st.download_button(
                         label="Download",
                         data=self.text_result,
                         file_name="anonymisiert.txt",
                         mime="text/plain",
                     )
-                    file_names = [
-                        self.output_file_long,
-                        self.output_file_short,
-                        self.output_file_stat,
-                        self.output_errors,
-                    ]
-                    zip_files(file_names, self.output_file_zip)
-                    with open(classifier.output_file_zip, "rb") as fp:
-                        btn = st.download_button(
-                            label=lang["download_results"],
-                            data=fp,
-                            file_name="download.zip",
-                            mime="application/zip",
-                            help=lang["download_help_text"],
-                        )
