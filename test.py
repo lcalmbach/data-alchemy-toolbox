@@ -1,31 +1,54 @@
-from openai import OpenAI
-import pandas as pd
-import streamlit as st
+import enum
+import openai
+from openai_functions import Conversation
+from dataclasses import dataclass
+import openai
+from openai_functions import nlp
+from openai_functions import FunctionWrapper
+from openai_functions import BasicFunctionSet
+
+openai.api_key = "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"
+
+conversation = Conversation()
 
 
-images = pd.read_csv("./data/demo/images.csv")
-images.columns = ["url"]
-client = OpenAI()
+class Unit(enum.Enum):
+    FAHRENHEIT = "fahrenheit"
+    CELSIUS = "celsius"
 
-url_root = "https://images-datbx.s3.eu-central-1.amazonaws.com/"
-url = f"{url_root}{images.iloc[0]['url']}"
-print(url)
-response = client.chat.completions.create(
-    model="gpt-4-vision-preview",
-    messages=[
-        {
-            "role": "user",
-            "content": [
-                {"type": "text", "text": "What’s in this image?"},
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": url,
-                    },
-                },
-            ],
-        }
-    ],
-    max_tokens=300,
+
+skill = BasicFunctionSet()
+
+
+class Unit(enum.Enum):
+    FAHRENHEIT = "fahrenheit"
+    CELSIUS = "celsius"
+
+
+@skill.add_function
+def get_current_weather(location: str, unit: Unit = Unit.FAHRENHEIT) -> dict:
+    """Get the current weather in a given location.
+
+    Args:
+        location (str): The city and state, e.g., San Francisco, CA
+        unit (Unit): The unit to use, e.g., fahrenheit or celsius
+    """
+    return {
+        "location": location,
+        "temperature": "72",
+        "unit": unit.value,
+        "forecast": ["sunny", "windy"],
+    }
+
+
+@skill.add_function
+def set_weather(location: str, weather_description: str):
+    ...
+
+
+schema = skill.functions_schema
+print(schema)
+
+weather = skill(
+    {"name": "get_current_weather", "arguments": '{"location": "San Francisco, CA"}'}
 )
-st.write(response.choices[0].message.content)

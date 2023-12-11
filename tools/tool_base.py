@@ -4,16 +4,19 @@ from helper import get_var
 from openai import OpenAI
 import tiktoken
 
+# import boto3
+
 MAX_ERRORS = 3
 LLM_RETRIES = 3
 SLEEP_TIME_AFTER_ERROR = 30
 DEFAULT_TEMPERATURE = 0.3
 DEFAULT_MAX_TOKENS = 500
-MODEL_OPTIONS = ["gpt-3.5-turbo", "gpt-4"]
+MODEL_OPTIONS = ["gpt-3.5-turbo", 'gpt-3.5-turbo-1106']
 MODEL_TOKEN_PRICING = {
-    "gpt-3.5-turbo": {"in": 0.0015, "out": 0.002},
-    "gpt-4": {"in": 0.03, "out": 0.06},
+    MODEL_OPTIONS[0]: {"in": 0.0015, "out": 0.002},
+    MODEL_OPTIONS[1]: {"in": 0.03, "out": 0.06},
 }
+MODEL_MAX_TOKENS = {MODEL_OPTIONS[0]: 4096,  MODEL_OPTIONS[1]: 16385}
 
 
 class ToolBase:
@@ -24,6 +27,9 @@ class ToolBase:
         self.model = MODEL_OPTIONS[0]
         self.tokens_in = 0
         self.tokens_out = 0
+
+    def chunk_size(self):
+        return MODEL_MAX_TOKENS[self.model] - 2000
 
     def get_model(self):
         return st.selectbox(
@@ -91,12 +97,12 @@ class ToolBase:
                     completion.usage.completion_tokens,
                     completion.usage.prompt_tokens,
                 ]
-                return completion.choices[0].message.content, tokens
+                return completion.choices[0].message.content.strip(), tokens
             except Exception as err:
                 st.error(f"OpenAIError {err}, Index = {index}")
                 retries -= 1
                 time.sleep(SLEEP_TIME_AFTER_ERROR)
-        return [], 0
+        return "", 0
 
     def show_settings(self):
         pass

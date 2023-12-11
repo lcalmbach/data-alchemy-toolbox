@@ -8,6 +8,7 @@ import string
 import csv
 import zipfile
 import random
+import logging
 
 lang_dict_complete = {}
 
@@ -188,6 +189,47 @@ def zip_files(file_names: list, target_file: str):
             # Add file to the zip file
             # The arcname parameter avoids storing the full path in the zip file
             zipf.write(file, arcname=os.path.basename(file))
+
+
+def init_logging(name, filename, console_level=logging.DEBUG, file_level=logging.ERROR):
+    # Create a logger
+    logger = logging.getLogger(name)
+    logger.setLevel(min(console_level, file_level))  # Set to the lower of the two levels
+
+    # Create a file handler and set level
+    file_handler = logging.FileHandler(filename)
+    file_handler.setLevel(file_level)
+
+    # Create a console handler and set level
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(console_level)
+
+    # Create a formatter with a custom time format (excluding milliseconds)
+    time_format = "%Y-%m-%d %H:%M:%S"  # Custom time format
+    formatter = logging.Formatter(f'%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt=time_format)
+
+    file_handler.setFormatter(formatter)
+    console_handler.setFormatter(formatter)
+
+    # Add the handlers to the logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    return logger
+
+
+def split_text(text: str, chunk_size: int=2048):
+    chunks = []
+    current_chunk = ""
+    for sentence in text.split("."):
+        if len(current_chunk) + len(sentence) < chunk_size:
+            current_chunk += sentence + "."
+        else:
+            chunks.append(current_chunk.strip())
+            current_chunk = sentence + "."
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+    return chunks
 
 
 LOCAL_HOST = "liestal"
