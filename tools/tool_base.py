@@ -11,12 +11,12 @@ LLM_RETRIES = 3
 SLEEP_TIME_AFTER_ERROR = 30
 DEFAULT_TEMPERATURE = 0.3
 DEFAULT_MAX_TOKENS = 500
-MODEL_OPTIONS = ["gpt-3.5-turbo", 'gpt-3.5-turbo-1106']
+MODEL_OPTIONS = ["gpt-3.5-turbo", "gpt-3.5-turbo-1106"]
 MODEL_TOKEN_PRICING = {
     MODEL_OPTIONS[0]: {"in": 0.0015, "out": 0.002},
-    MODEL_OPTIONS[1]: {"in": 0.03, "out": 0.06},
+    MODEL_OPTIONS[1]: {"in": 0.0030, "out": 0.004},
 }
-MODEL_MAX_TOKENS = {MODEL_OPTIONS[0]: 4096,  MODEL_OPTIONS[1]: 16385}
+MODEL_MAX_TOKENS = {MODEL_OPTIONS[0]: 4096, MODEL_OPTIONS[1]: 16385}
 
 
 class ToolBase:
@@ -50,13 +50,15 @@ class ToolBase:
             markdown_content = file.read()
         return markdown_content
 
-    def token_use_expression(self, tokens: list):
-        cost_tokens_in = MODEL_TOKEN_PRICING[self.model]["in"] * tokens[0] / 1000
-        cost_tokens_out = MODEL_TOKEN_PRICING[self.model]["out"] * tokens[1] / 1000
+    def token_use_expression(self):
+        cost_tokens_in = MODEL_TOKEN_PRICING[self.model]["in"] * self.tokens_in / 1000
+        cost_tokens_out = (
+            MODEL_TOKEN_PRICING[self.model]["out"] * self.tokens_out / 1000
+        )
         return f"""
-            Tokens in: {tokens[0]} Kosten: ${cost_tokens_in: .2f}\n
-            Tokens out: {tokens[1]} Kosten: ${cost_tokens_out: .2f}\n
-            Total Tokens: {tokens[0] + tokens[1]} Kosten: ${(cost_tokens_in + cost_tokens_out): .2f}
+            Tokens in: {self.tokens_in} Kosten: ${cost_tokens_in: .2f}\n
+            Tokens out: {self.tokens_out} Kosten: ${cost_tokens_out: .2f}\n
+            Total Tokens: {self.tokens_in + self.tokens_out} Kosten: ${(cost_tokens_in + cost_tokens_out): .2f}
             """
 
     def num_tokens_from_string(string: str, encoding_name: str) -> int:
@@ -94,8 +96,8 @@ class ToolBase:
                     max_tokens=self.max_tokens,
                 )
                 tokens = [
-                    completion.usage.completion_tokens,
                     completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
                 ]
                 return completion.choices[0].message.content.strip(), tokens
             except Exception as err:

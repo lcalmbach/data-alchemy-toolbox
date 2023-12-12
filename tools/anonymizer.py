@@ -292,14 +292,13 @@ class Anonymizer(ToolBase):
         )
 
     def run(self):
-        if (get_hostname() not in DEV_WORKSTATIONS):
-            st.warning(""""Wir bitten um Entschuldigung. Diese Funktion ist nur auf den Entwickler-Workstations verfügbar. 
+        if get_hostname() not in DEV_WORKSTATIONS:
+            st.warning(
+                """"Wir bitten um Entschuldigung. Diese Funktion ist nur auf den Entwickler-Workstations verfügbar. 
 Der Flair recognizer nimmt ca. 2GB Festlplatten Speicher in Anspruch, was die Kapazität auf der aktuellen 
-Cloud-Plattform übersteigt.""")
-        elif st.button(
-            "Starten",
-            disabled=(get_hostname() not in DEV_WORKSTATIONS)
-        ):
+Cloud-Plattform übersteigt."""
+            )
+        elif st.button("Starten", disabled=(get_hostname() not in DEV_WORKSTATIONS)):
             with st.spinner("Anonymisierung wird initialisiert..."):
                 engine = AnonymizerEngine()
                 configuration = {
@@ -360,4 +359,3 @@ Cloud-Plattform übersteigt.""")
                         file_name="anonymisiert.txt",
                         mime="text/plain",
                     )
-        

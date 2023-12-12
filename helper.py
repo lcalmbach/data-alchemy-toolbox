@@ -1,6 +1,6 @@
 import streamlit as st
-import iso639
 import json
+import io
 from io import BytesIO
 import os
 import socket
@@ -9,64 +9,10 @@ import csv
 import zipfile
 import random
 import logging
+import zipfile
+import fitz
 
-lang_dict_complete = {}
-
-
-def get_lang_name(lang_code):
-    return get_all_language_dict()[lang_code]
-
-
-def init_lang_dict_complete(module: str):
-    """
-    Retrieves the complete language dictionary from a JSON file.
-
-    Returns:
-    - lang (dict): A Python dictionary containing all the language strings.
-    """
-    global lang_dict_complete
-
-    lang_file = f"./lang/{module.replace('.py','.json')}"
-    try:
-        with open(lang_file, "r") as file:
-            lang_dict_complete = json.load(file)
-    except FileNotFoundError:
-        print("File not found.")
-        return {}
-    except json.JSONDecodeError:
-        print("Invalid JSON format.")
-        return {}
-    except Exception as e:
-        print("An error occurred:", str(e))
-        return {}
-
-
-def get_all_language_dict():
-    """
-    Retrieves a dictionary containing all the available languages and their
-    ISO 639-1 codes.
-
-    Returns:
-        language_dict (dict): A Python dictionary where the keys are the ISO 639-1 codes and the values are the language names.
-    """
-    keys = [lang["iso639_1"] for lang in iso639.data if lang["iso639_1"] != ""]
-    values = [lang["name"] for lang in iso639.data if lang["iso639_1"] != ""]
-    language_dict = dict(zip(keys, values))
-    return language_dict
-
-
-def get_used_languages():
-    language_dict = get_all_language_dict()
-    used_languages = list(lang_dict_complete.keys())
-    extracted_dict = {
-        key: language_dict[key] for key in used_languages if key in language_dict
-    }
-    return extracted_dict
-
-
-def get_lang(lang_code: str):
-    return lang_dict_complete[lang_code]
-
+LOCAL_HOST = "liestal"
 
 def download_button(data, download_filename, button_text):
     """
@@ -194,7 +140,9 @@ def zip_files(file_names: list, target_file: str):
 def init_logging(name, filename, console_level=logging.DEBUG, file_level=logging.ERROR):
     # Create a logger
     logger = logging.getLogger(name)
-    logger.setLevel(min(console_level, file_level))  # Set to the lower of the two levels
+    logger.setLevel(
+        min(console_level, file_level)
+    )  # Set to the lower of the two levels
 
     # Create a file handler and set level
     file_handler = logging.FileHandler(filename)
@@ -206,7 +154,9 @@ def init_logging(name, filename, console_level=logging.DEBUG, file_level=logging
 
     # Create a formatter with a custom time format (excluding milliseconds)
     time_format = "%Y-%m-%d %H:%M:%S"  # Custom time format
-    formatter = logging.Formatter(f'%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt=time_format)
+    formatter = logging.Formatter(
+        f"%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt=time_format
+    )
 
     file_handler.setFormatter(formatter)
     console_handler.setFormatter(formatter)
@@ -218,7 +168,7 @@ def init_logging(name, filename, console_level=logging.DEBUG, file_level=logging
     return logger
 
 
-def split_text(text: str, chunk_size: int=2048):
+def split_text(text: str, chunk_size: int = 2048):
     chunks = []
     current_chunk = ""
     for sentence in text.split("."):
@@ -232,4 +182,116 @@ def split_text(text: str, chunk_size: int=2048):
     return chunks
 
 
-LOCAL_HOST = "liestal"
+def check_file_type(uploaded_file):
+    """
+    Check the type of the uploaded file based on its content.
+
+    Parameters:
+    uploaded_file (file): The file object representing the uploaded file.
+
+    Returns:
+    str: The type of the file. Possible values are 'pdf', 'txt', 'docx',
+    'xlsx', 'pptx', 'zip', 'Bad ZIP File', or 'Unknown'.
+    """
+
+    def check_msoffice_format():
+        """
+        Check if the uploaded file is in Microsoft Office format (docx, xlsx, pptx).
+
+        Returns:
+        str: The file format if it is a Microsoft Office file, otherwise 'zip' if it is a ZIP file, 'Bad ZIP File' if it is a corrupted ZIP file, or 'Unknown' if it is neither.
+        """
+        # Read the start of the file
+        header = uploaded_file.read(4)  # Read first 4 bytes for ZIP signature
+        uploaded_file.seek(0)  # Reset file read position
+
+        # Check for ZIP signature (common for both DOCX and XLSX)
+        if header == b"PK\x03\x04":
+            # Further check internal structure if needed
+            try:
+                with zipfile.ZipFile(uploaded_file, "r") as zipped_file:
+                    if any("word/" in item.filename for item in zipped_file.infolist()):
+                        return "docx"
+                    elif any("xl/" in item.filename for item in zipped_file.infolist()):
+                        return "xlsx"
+                    elif any(
+                        "ppt/" in item.filename for item in zipped_file.infolist()
+                    ):
+                        return "pptx"
+                    else:
+                        return "zip"
+            except zipfile.BadZipFile:
+                return "Bad ZIP File"
+        else:
+            return "Unknown"
+
+    def check_text_or_pdf(uploaded_file) -> str:
+        """
+        Check if the uploaded file is a PDF or a text file.
+
+        Returns:
+        str: 'PDF' if the file is a PDF, 'Text' if the file is a text file, or 'unknown' if it is neither.
+        """
+        header = uploaded_file.read(1024)  # Read first 1024 bytes
+        uploaded_file.seek(0)  # Reset file read position
+        if header.startswith(b"%PDF-"):
+            return "PDF"
+        else:
+            try:
+                # Try reading as text
+                text = header.decode("utf-8")
+                return "Text"
+            except UnicodeDecodeError:
+                return "unknown"
+
+    type = check_text_or_pdf()
+    if type == "unknown":
+        type = check_msoffice_format()
+    return type
+
+
+def extract_text_from_pdf(input_file: BytesIO, placeholder) -> str:
+    """
+    Extracts text from a PDF document.
+
+    Args:
+        input_file (BytesIO): The input PDF file.
+        placeholder: A placeholder object to write extraction progress.
+
+    Returns:
+        str: The extracted text from the PDF document.
+    """
+    pdf_document = fitz.open(stream=input_file.read(), filetype="pdf")
+    text = ""
+    for page_number in range(pdf_document.page_count):
+        page = pdf_document[page_number]
+        if placeholder:
+            placeholder.write(f"Page {page_number} extracted")
+        text += page.get_text()
+    return text
+
+
+def show_download_button(
+    text_data: str,
+    download_filename: str = "download.txt",
+    button_text: str = "Datei Herunterladen",
+):
+    """
+    Function to create a download button for a given object.
+
+    Parameters:
+    - object_to_download: The object to be downloaded.
+    - download_filename: The name of the file to be downloaded.
+    - button_text: The text to be displayed on the download button.
+    """
+
+    # Convert the text data to a bytes stream
+    text_bytes = io.BytesIO(text_data.encode("utf-8"))
+
+    # Create a download button and offer the text data for download
+    st.download_button(
+        label=button_text,
+        data=text_bytes,
+        file_name=download_filename,
+        mime="text/plain",
+    )

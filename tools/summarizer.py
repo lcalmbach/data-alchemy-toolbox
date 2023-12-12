@@ -4,7 +4,17 @@ import os
 import io
 from enum import Enum
 import logging
-from helper import create_file, append_row, zip_files, get_var, init_logging, split_text
+from helper import (
+    create_file,
+    append_row,
+    zip_files,
+    get_var,
+    init_logging,
+    split_text,
+    check_file_type,
+    extract_text_from_pdf,
+    show_download_button
+)
 from tools.tool_base import ToolBase, MODEL_OPTIONS
 
 logger = init_logging(__name__, "messages.log")
@@ -12,8 +22,8 @@ logger = init_logging(__name__, "messages.log")
 DEMO_FILE = "./data/demo/demo_summary.txt"
 SYSTEM_PROMPT_TEMPLATE = "You will be provided with a text. Your task is to summarize the text in german. The summary should contain a maximum of {}"
 LIMIT_OPTIONS = ["Zeichen", "Tokens", "Sätze"]
-INPUT_FORMAT_OPTIONS = ["Demo", "pdf-Datei", "zip Datei", "S3-Bucket"]
-OUTPUT_FORMAT_OPTIONS = ["Textfeld auf Maske", "Eine csv-Datei", "Text Dateien gezippt", "Text Dateien in S3-Bucket"]
+FILE_FORMAT_OPTIONS = ["pdf", "txt"]
+INPUT_FORMAT_OPTIONS = ["Demo", "Eine Datei", "Mehrere Dateien gezippt", "S3-Bucket"]
 
 
 class limitType(Enum):
@@ -24,8 +34,8 @@ class limitType(Enum):
 
 class InputFormat(Enum):
     DEMO = 0
-    PDF = 1
-    ZIP = 2
+    FilE = 1
+    ZIPPED_FILE = 2
     S3 = 3
 
 
@@ -44,7 +54,7 @@ class Summary(ToolBase):
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
         self.input_format = INPUT_FORMAT_OPTIONS[0]
-        self.output_format = OUTPUT_FORMAT_OPTIONS[0]
+
         self.limit_type = LIMIT_OPTIONS[0]
         self.limit_number = 500
         self.model = MODEL_OPTIONS[1]
@@ -80,8 +90,7 @@ class Summary(ToolBase):
                 help="Wähle die Einheit der Limite, die du verwenden möchtest.",
             )
         self.input_format = st.selectbox(
-            label="Input Format",
-            options=INPUT_FORMAT_OPTIONS
+            label="Input Format", options=INPUT_FORMAT_OPTIONS
         )
         if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.DEMO.value:
             self.text = st.text_area(
@@ -90,82 +99,93 @@ class Summary(ToolBase):
                 height=400,
                 help="Geben Sie den Text ein, den Sie zusammenfassen möchten.",
             )
-        elif INPUT_FORMAT_OPTIONS.index(self.input_format) in (InputFormat.PDF.value, InputFormat.ZIP.value):
-            text = "pdf Datei" if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.PDF.value else "zip Datei"
-            formats = ['pdf'] if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.PDF.value else ['zip']
+        elif INPUT_FORMAT_OPTIONS.index(self.input_format) in (
+            InputFormat.FilE.value,
+            InputFormat.ZIP.value,
+        ):
+            formats = ",".join(FILE_FORMAT_OPTIONS)
             self.input_file = st.file_uploader(
-                text,
+                "PDF oder Text Datei",
                 type=formats,
                 help="Laden Sie die Datei hoch, die Sie zusammenfassen möchten.",
             )
-        
+
         if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value:
             self.s3_input_bucket = st.text_input(
                 "S3-Bucket",
                 value=self.s3_input_bucket,
                 help="Geben Sie die ARN des S3-Buckets ein, der die Dateien enthält, die Sie zusammenfassen möchten.",
             )
-        # output format
-        if INPUT_FORMAT_OPTIONS.index(self.input_format) > InputFormat.DEMO.value:
-            self.output_format = st.selectbox(
-                label="Ausgabe Format",
-                options=OUTPUT_FORMAT_OPTIONS[1:]
-            )
-        if OUTPUT_FORMAT_OPTIONS.index(self.output_format) == OutputFormat.S3.value:
-            self.s3_output_bucket = st.text_input(
-                "S3-Ausgabe-Bucket",
-                value=self.s3_output_bucket,
-                help="Geben Sie die ARN des S3-Buckets ein, in dem die Zusammenfassungs-Dateien gespeichert werden sollen.",
-            )
 
     def run(self):
-        def generate_summary(text, placeholder):
+        def show_summary_text_field():
+            st.markdown(self.token_use_expression())
+            st.text_area("Zusammenfassung", value=self.output, height=400)
+            show_download_button(text_data=self.output)
+
+        def generate_summary(text: str, placeholder) -> str:
+            """
+            Generate a summary of the given text. if the text does not fit into the max_tokens limit,
+            it is split into chunks and a summary is generated for each chunk.
+
+            Args:
+                text (str): The input text to be summarized.
+                placeholder: The placeholder object to write progress updates.
+
+            Returns:
+                str: The generated summary of the text.
+            """
+            self.tokens_in, self.tokens_out = 0, 0
             buffer_number = self.limit_number
             buffer_type = self.limit_type
-            self.limit_number = 1 
-            self.limit_type = 'sentence'
-            st.write(self.chunk_size())
+            self.limit_number = 1
+            self.limit_type = "sentence"
             input_chunks = split_text(text, chunk_size=self.chunk_size())
             output_chunks = []
             for chunk in input_chunks:
                 response, tokens = self.get_completion(text=chunk, index=0)
                 output_chunks.append(response)
-                print(response)
-                placeholder.write(f"Chunk {input_chunks.index(chunk)} / {len(input_chunks)} completed")
+                placeholder.write(
+                    f"Chunk {input_chunks.index(chunk)} / {len(input_chunks)} completed"
+                )
+                self.tokens_in += tokens[0]
+                self.tokens_out += tokens[1]
             self.limit_number = buffer_number
             self.limit_type = buffer_type
-            return " ".join(output_chunks)
+            # generate a summar for all chunks
+            text = " ".join(output_chunks)
+            self.output, tokens = self.get_completion(text=text, index=0)
+            self.tokens_in += tokens[0]
+            self.tokens_out += tokens[1]
 
         if st.button("Zusammenfassung"):
             with st.spinner("Generiere Zusammenfassung..."):
                 self.errors = []
-                if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.DEMO.value:
+                placeholder = st.empty()
+                if (
+                    INPUT_FORMAT_OPTIONS.index(self.input_format)
+                    == InputFormat.DEMO.value
+                ):
                     self.output, tokens = self.get_completion(text=self.text, index=0)
-                    st.markdown(self.token_use_expression(tokens))
-                    st.markdown(self.output)
-                elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.PDF.value: 
-                    placeholder = st.empty()
+                    self.tokens_in, self.tokens_out = tokens
+                    show_summary_text_field()
+                elif (
+                    INPUT_FORMAT_OPTIONS.index(self.input_format)
+                    == InputFormat.FILE.value
+                ):
                     if self.input_file:
-                        if self.input_file.type == "application/pdf":
-                            pdf_document = fitz.open(stream=self.input_file.read(), filetype="pdf")
-                            text = ""
-                            for page_number in range(pdf_document.page_count):
-                                page = pdf_document[page_number]
-                                placeholder.write(f"Page {page_number} extracted")
-                                text += page.get_text()
-
-                            # generate a summary for each chunk
-                            text = generate_summary(text, placeholder)
-                            self.output, tokens = self.get_completion(text=text, index=0)
-                            st.text_area("Zusammenfassung", value=self.output, height=400)
-                            text_buffer = io.StringIO()
-                            text_buffer.write(self.output)
-                            # Provide a download link for the extracted text
-                            st.download_button(
-                                "Text herunterladen",
-                                text_buffer.getvalue(),
-                                file_name="extracted_text.txt",
-                                key="text-download",
-                            )
+                        if check_file_type(self.input_file) == "pdf":
+                            text = extract_text_from_pdf(self.input_file)
+                            generate_summary(text, placeholder)
+                            show_summary_text_field()
+                elif (
+                    INPUT_FORMAT_OPTIONS.index(self.input_format)
+                    == InputFormat.ZIP.value
+                ):
+                    if self.input_file:
+                        if check_file_type(self.input_file) == "pdf":
+                            text = extract_text_from_pdf(self.input_file)
+                            generate_summary(text, placeholder)
+                            show_summary_text_field()
                 else:
                     st.warning("Diese Option wird noch nicht unterstützt.")
