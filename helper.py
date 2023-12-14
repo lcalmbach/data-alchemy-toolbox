@@ -1,7 +1,6 @@
 import streamlit as st
 import json
 import io
-from io import BytesIO
 import os
 import socket
 import string
@@ -9,23 +8,52 @@ import csv
 import zipfile
 import random
 import logging
-import zipfile
 import fitz
 
 LOCAL_HOST = "liestal"
+LOGFILE = "./data-alchemy-toolbox.log"
+
+
+def download_file_button(file_path: str, button_text: str="Download"):
+    """
+    Creates a Streamlit download button that allows users to download a file.
+
+    Parameters:
+        button_text (str): The text to display on the download button. Default is "Download".
+        file_path (str): The path to the file to be downloaded.
+
+    Returns:
+        None
+    """
+    if st.button(button_text):
+        with open(file_path, "rb") as file:
+            file_data = file.read()
+        st.download_button(
+            label="Click here to download",
+            data=file_data,
+            key="file_download",
+            file_name=file_path
+        )
+
+
+
 
 def download_button(data, download_filename, button_text):
     """
-    Function to create a download button for a given object.
+    Generates a download button for a given data object.
 
     Parameters:
-    - object_to_download: The object to be downloaded.
+    - data: The data object to be downloaded.
     - download_filename: The name of the file to be downloaded.
     - button_text: The text to be displayed on the download button.
+
+    Returns:
+    None
     """
+    
     # Create a BytesIO buffer
     json_bytes = json.dumps(data).encode("utf-8")
-    buffer = BytesIO(json_bytes)
+    buffer = io.BytesIO(json_bytes)
 
     # Set the appropriate headers for the browser to recognize the download
     st.set_option("deprecation.showfileUploaderEncoding", False)
@@ -121,6 +149,24 @@ def append_row(file_name: str, row: list) -> None:
         writer.writerows(row)
 
 
+def zip_texts(texts: list, filenames: list, zip_filename: str="summaries.zip"):
+    """
+    Zips a list of texts into a zip file.
+
+    Args:
+        texts (list): A list of texts to be zipped.
+        filenames (list): A list of filenames corresponding to each text.
+        zip_filename: filename of zipfile
+
+    Returns:
+        None
+    """
+
+    with zipfile.ZipFile(zip_filename, "w") as zipf:
+        for text, file_name in zip(texts, filenames):
+            zipf.writestr(file_name, text)
+
+
 def zip_files(file_names: list, target_file: str):
     """
     Compresses a list of files into a zip file. The zip file will be
@@ -138,6 +184,18 @@ def zip_files(file_names: list, target_file: str):
 
 
 def init_logging(name, filename, console_level=logging.DEBUG, file_level=logging.ERROR):
+    """
+    Initialize logging configuration.
+
+    Args:
+        name (str): The name of the logger.
+        filename (str): The name of the log file.
+        console_level (int, optional): The logging level for console output. Defaults to logging.DEBUG.
+        file_level (int, optional): The logging level for file output. Defaults to logging.ERROR.
+
+    Returns:
+        logging.Logger: The configured logger object.
+    """
     # Create a logger
     logger = logging.getLogger(name)
     logger.setLevel(
@@ -169,6 +227,16 @@ def init_logging(name, filename, console_level=logging.DEBUG, file_level=logging
 
 
 def split_text(text: str, chunk_size: int = 2048):
+    """
+    Splits a given text into chunks of sentences, where each chunk has a maximum size of chunk_size.
+
+    Args:
+        text (str): The text to be split.
+        chunk_size (int, optional): The maximum size of each chunk. Defaults to 2048.
+
+    Returns:
+        list: A list of chunks, where each chunk is a string of sentences.
+    """
     chunks = []
     current_chunk = ""
     for sentence in text.split("."):
@@ -225,7 +293,7 @@ def check_file_type(uploaded_file):
         else:
             return "Unknown"
 
-    def check_text_or_pdf(uploaded_file) -> str:
+    def check_text_or_pdf() -> str:
         """
         Check if the uploaded file is a PDF or a text file.
 
@@ -250,7 +318,7 @@ def check_file_type(uploaded_file):
     return type
 
 
-def extract_text_from_pdf(input_file: BytesIO, placeholder) -> str:
+def extract_text_from_pdf(input_file: io.BytesIO, placeholder) -> str:
     """
     Extracts text from a PDF document.
 
@@ -295,3 +363,16 @@ def show_download_button(
         file_name=download_filename,
         mime="text/plain",
     )
+
+def get_text_from_binary(binary_content: io.BytesIO):
+    try:
+        return binary_content.decode("utf-8")
+    except UnicodeDecodeError:
+        try:
+            return binary_content.decode("cp1252")
+        except UnicodeDecodeError:
+            return binary_content.decode("latin1")
+        except:
+            return ''
+
+logger = init_logging(__name__, LOGFILE)
