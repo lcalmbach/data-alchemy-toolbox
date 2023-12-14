@@ -33,7 +33,7 @@ class ToolBase:
 
     def get_model(self):
         return st.selectbox(
-            "Model",
+            "Modell",
             options=MODEL_OPTIONS,
             index=0,
             help="Wählen Sie das LLM Modell, das Sie verwenden möchten.",

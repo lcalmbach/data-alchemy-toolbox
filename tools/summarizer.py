@@ -95,7 +95,7 @@ class Summary(ToolBase):
         )
         if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.DEMO.value:
             self.text = st.text_area(
-                "Text",
+                "Demo Text für die Zusammenfassung",
                 value=self.text,
                 height=400,
                 help="Geben Sie den Text ein, den Sie zusammenfassen möchten.",
