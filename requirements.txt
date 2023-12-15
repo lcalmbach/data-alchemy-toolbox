@@ -16,3 +16,4 @@ pypdf==3.17.0
 tiktoken==0.3.3
 boto3==1.17.106
 openai==1.2.3
+nltk==3.8.1

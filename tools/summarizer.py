@@ -12,7 +12,7 @@ from helper import (
     show_download_button,
     zip_texts,
     get_text_from_binary,
-    download_file_button
+    download_file_button,
 )
 import concurrent.futures
 from const import LOGFILE, OUTPUT_PATH
@@ -101,16 +101,19 @@ class Summary(ToolBase):
                 help="Geben Sie den Text ein, den Sie zusammenfassen möchten.",
             )
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.FILE.value:
-            formats = ",".join(FILE_FORMAT_OPTIONS) 
+            formats = ",".join(FILE_FORMAT_OPTIONS)
             self.input_file = st.file_uploader(
                 "PDF oder Text Datei",
                 type=formats,
                 help="Laden Sie die Datei hoch, die Sie zusammenfassen möchten.",
             )
-        elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.ZIPPED_FILE.value:
+        elif (
+            INPUT_FORMAT_OPTIONS.index(self.input_format)
+            == InputFormat.ZIPPED_FILE.value
+        ):
             self.input_file = st.file_uploader(
                 "ZIP Datei",
-                type=['zip'],
+                type=["zip"],
                 help="Laden Sie die Datei hoch, die Sie zusammenfassen möchten. Die ZIP Datei darf Dateien im Format txt und pdf enthalten.",
             )
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value:
@@ -172,7 +175,7 @@ class Summary(ToolBase):
                     self.output, tokens = self.get_completion(text=self.text, index=0)
                     self.tokens_in, self.tokens_out = tokens
                     show_summary_text_field()
-                
+
                 elif (
                     INPUT_FORMAT_OPTIONS.index(self.input_format)
                     == InputFormat.FILE.value
@@ -190,56 +193,76 @@ class Summary(ToolBase):
                         if check_file_type(self.input_file) == "zip":
                             summaries = []
                             file_names = []
-                            with zipfile.ZipFile(self.input_file, 'r') as zip_ref:
+                            with zipfile.ZipFile(self.input_file, "r") as zip_ref:
                                 for file in zip_ref.infolist():
-                                    text, out_filename = '', ''
-                                    placeholder.markdown(f"{file.filename} wird zusammengefasst.")
+                                    text, out_filename = "", ""
+                                    placeholder.markdown(
+                                        f"{file.filename} wird zusammengefasst."
+                                    )
                                     if file.filename.endswith(".pdf"):
                                         with zip_ref.open(file) as pdf_file:
-                                            text = extract_text_from_pdf(pdf_file, placeholder)
-                                            out_filename = file.filename.replace(".pdf", ".txt")
+                                            text = extract_text_from_pdf(
+                                                pdf_file, placeholder
+                                            )
+                                            out_filename = file.filename.replace(
+                                                ".pdf", ".txt"
+                                            )
                                     elif file.filename.endswith(".txt"):
                                         with zip_ref.open(file) as text_file:
                                             binary_content = text_file.read()
                                             text = get_text_from_binary(binary_content)
                                             out_filename = file.filename
-                                    if text > '':
+                                    if text > "":
                                         generate_summary(text, placeholder)
                                         summaries.append(self.output)
                                         file_names.append(out_filename)
                                     else:
-                                        st.warning(f"Die Datei {file.filename} hat nicht das richtige Format und ist leer oder konnte nicht gelesen werden.")
-                            self.output_file = OUTPUT_PATH + self.input_file.name.replace(".zip", "_output.zip")
-                            placeholder.markdown(f"Alle Dateien in wurden zusammengefasst und können als ZIP-Datei heruntergeladen werden.")
+                                        st.warning(
+                                            f"Die Datei {file.filename} hat nicht das richtige Format und ist leer oder konnte nicht gelesen werden."
+                                        )
+                            self.output_file = (
+                                OUTPUT_PATH
+                                + self.input_file.name.replace(".zip", "_output.zip")
+                            )
+                            placeholder.markdown(
+                                f"Alle Dateien in wurden zusammengefasst und können als ZIP-Datei heruntergeladen werden."
+                            )
                             zip_texts(summaries, file_names, self.output_file)
                     if self.output_file:
                         download_file_button(self.output_file, "Datei herunterladen")
-            
+
                 elif (
-                    (INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value) and (self.s3_input_bucket > '')
-                ):
-                    s3 = boto3.client('s3')
-                    bucket_name = 'data-alchemy-bucket-01/'
-                    input_folder = 'input/'
-                    output_folder = 'output/'
+                    INPUT_FORMAT_OPTIONS.index(self.input_format)
+                    == InputFormat.S3.value
+                ) and (self.s3_input_bucket > ""):
+                    s3 = boto3.client("s3")
+                    bucket_name = "data-alchemy-bucket-01/"
+                    input_folder = "input/"
+                    output_folder = "output/"
                     st.write(123)
                     # List all objects (files) in the S3 bucket
                     s3_objects = s3.list_objects(Bucket=bucket_name + input_folder)
                     st.write(s3_objects)
-                    file_keys = [obj['Key'] for obj in s3_objects['Contents']]
+                    file_keys = [obj["Key"] for obj in s3_objects["Contents"]]
                     st.write(file_keys)
                     # Create a thread pool for concurrent file processing
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         # Map the summarize_file function to each file key in the bucket
                         try:
-                            file_keys = [obj['Key'] for obj in s3_objects['Contents']]
+                            file_keys = [obj["Key"] for obj in s3_objects["Contents"]]
                             for file_key in file_keys:
-                                response = s3.get_object(Bucket=bucket_name + input_folder, Key=file_key)
-                                text = response['Body'].read().decode('utf-8')
+                                response = s3.get_object(
+                                    Bucket=bucket_name + input_folder, Key=file_key
+                                )
+                                text = response["Body"].read().decode("utf-8")
                                 st.write(text)
                                 generate_summary(text, placeholder)
                                 # Save the result text to the "output" folder in the same bucket
                                 output_key = output_folder + file_key
-                                s3.put_object(Bucket=bucket_name, Key=output_key, Body=self.output.encode('utf-8'))
+                                s3.put_object(
+                                    Bucket=bucket_name,
+                                    Key=output_key,
+                                    Body=self.output.encode("utf-8"),
+                                )
                         except Exception as e:
                             return str(e)

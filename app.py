@@ -11,12 +11,13 @@ from tools import (
     pdf2text,
     pdfchat,
     image2text,
+    tokenizer,
 )
 
-__version__ = "0.0.10"
+__version__ = "0.0.11"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2023-12-14"
+VERSION_DATE = "2023-12-15"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
@@ -32,6 +33,7 @@ menu_dic = {
     "Übersetzung": translation.Translation,
     "PDF2TXT": pdf2text.Pdf2Text,
     "PDF-Chatbot": pdfchat.PdfChat,
+    "Tokenizer": tokenizer.Tokenizer,
 }
 
 menu_icons = [
@@ -44,6 +46,7 @@ menu_icons = [
     "globe",
     "file-earmark-pdf",
     "chat",
+    "body-text",
 ]
 
 

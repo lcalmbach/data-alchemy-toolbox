@@ -14,7 +14,7 @@ LOCAL_HOST = "liestal"
 LOGFILE = "./data-alchemy-toolbox.log"
 
 
-def download_file_button(file_path: str, button_text: str="Download"):
+def download_file_button(file_path: str, button_text: str = "Download"):
     """
     Creates a Streamlit download button that allows users to download a file.
 
@@ -32,10 +32,8 @@ def download_file_button(file_path: str, button_text: str="Download"):
             label="Click here to download",
             data=file_data,
             key="file_download",
-            file_name=file_path
+            file_name=file_path,
         )
-
-
 
 
 def download_button(data, download_filename, button_text):
@@ -50,7 +48,7 @@ def download_button(data, download_filename, button_text):
     Returns:
     None
     """
-    
+
     # Create a BytesIO buffer
     json_bytes = json.dumps(data).encode("utf-8")
     buffer = io.BytesIO(json_bytes)
@@ -149,7 +147,7 @@ def append_row(file_name: str, row: list) -> None:
         writer.writerows(row)
 
 
-def zip_texts(texts: list, filenames: list, zip_filename: str="summaries.zip"):
+def zip_texts(texts: list, filenames: list, zip_filename: str = "summaries.zip"):
     """
     Zips a list of texts into a zip file.
 
@@ -364,6 +362,7 @@ def show_download_button(
         mime="text/plain",
     )
 
+
 def get_text_from_binary(binary_content: io.BytesIO):
     try:
         return binary_content.decode("utf-8")
@@ -373,6 +372,7 @@ def get_text_from_binary(binary_content: io.BytesIO):
         except UnicodeDecodeError:
             return binary_content.decode("latin1")
         except:
-            return ''
+            return ""
+
 
 logger = init_logging(__name__, LOGFILE)
