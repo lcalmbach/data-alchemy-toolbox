@@ -13,7 +13,7 @@ Bitte beachten Sie, dass diese Applikation darauf abzielt, die Möglichkeiten ve
 | Zusammenfassung von Texten aus Text- oder PDF-Dateien | 🚧✅ |
 | Umwandlung von PDF-Dateien in Text | 🚧✅ |
 | Der PDF Chatbot, der Fragen zu einem geladenen Dokument beantwortet | 🚧✅ |
-| Öffnungszeiten Agent (Verwendung von Tools) | 💡 |
+| Tokenizer | 💡 |
 </br>
 
 | **Legende zur Verfügbarkeit:** | |

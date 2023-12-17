@@ -1,9 +1,9 @@
 import streamlit as st
 import zipfile
 import os
-import io
 from enum import Enum
 import boto3
+from io import BytesIO
 from helper import (
     init_logging,
     split_text,
@@ -13,8 +13,9 @@ from helper import (
     zip_texts,
     get_text_from_binary,
     download_file_button,
+    get_var,
+    get_token_size
 )
-import concurrent.futures
 from const import LOGFILE, OUTPUT_PATH
 from tools.tool_base import ToolBase, MODEL_OPTIONS
 
@@ -61,8 +62,9 @@ class Summary(ToolBase):
         self.model = MODEL_OPTIONS[1]
         self.input_file = None
         self.output_file = None
-        self.s3_input_bucket = ""
-        self.s3_output_bucket = ""
+        self.bucket_name = "data-alchemy-bucket-01"
+        self.input_prefix = "input/"
+        self.output_prefix = "output/"
         with open(DEMO_FILE, "r", encoding="utf8") as file:
             self.text = file.read()
 
@@ -72,6 +74,9 @@ class Summary(ToolBase):
         return SYSTEM_PROMPT_TEMPLATE.format(limit_expression)
 
     def show_settings(self):
+        self.input_format = st.selectbox(
+            label="Input Format", options=INPUT_FORMAT_OPTIONS
+        )
         self.model = self.get_model()
         st.markdown("Begrenze die Zusammenfassung auf")
         cols = st.columns([1, 1, 2])
@@ -90,9 +95,7 @@ class Summary(ToolBase):
                 index=0,
                 help="Wähle die Einheit der Limite, die du verwenden möchtest.",
             )
-        self.input_format = st.selectbox(
-            label="Input Format", options=INPUT_FORMAT_OPTIONS
-        )
+        
         if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.DEMO.value:
             self.text = st.text_area(
                 "Demo Text für die Zusammenfassung",
@@ -119,7 +122,7 @@ class Summary(ToolBase):
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value:
             self.s3_input_bucket = st.text_input(
                 "S3-Bucket",
-                value=self.s3_input_bucket,
+                value=self.bucket_name,
                 help="Geben Sie die ARN des S3-Buckets ein, der die Dateien enthält, die Sie zusammenfassen möchten.",
             )
 
@@ -152,15 +155,20 @@ class Summary(ToolBase):
                 response, tokens = self.get_completion(text=chunk, index=0)
                 output_chunks.append(response)
                 placeholder.write(
-                    f"Chunk {input_chunks.index(chunk)} / {len(input_chunks)} completed"
+                    f"Chunk {input_chunks.index(chunk) + 1} / {len(input_chunks)} completed"
                 )
                 self.tokens_in += tokens[0]
                 self.tokens_out += tokens[1]
             self.limit_number = buffer_number
             self.limit_type = buffer_type
-            # generate a summar for all chunks
+            
+            # generate a summary for all chunks
             text = " ".join(output_chunks)
-            self.output, tokens = self.get_completion(text=text, index=0)
+            # make sure the summary is not longer than the limit
+            input_chunks = split_text(text, chunk_size=self.chunk_size())
+            if len(input_chunks) > 1:
+                logger.info(f"Summary too long after summarizing the document in chunks. Only the first {self.chunk_size()} of {get_token_size(text)} tokens were used for summary.")
+            self.output, tokens = self.get_completion(text=input_chunks[0], index=0)
             self.tokens_in += tokens[0]
             self.tokens_out += tokens[1]
 
@@ -235,34 +243,54 @@ class Summary(ToolBase):
                     INPUT_FORMAT_OPTIONS.index(self.input_format)
                     == InputFormat.S3.value
                 ) and (self.s3_input_bucket > ""):
-                    s3 = boto3.client("s3")
-                    bucket_name = "data-alchemy-bucket-01/"
-                    input_folder = "input/"
-                    output_folder = "output/"
-                    st.write(123)
-                    # List all objects (files) in the S3 bucket
-                    s3_objects = s3.list_objects(Bucket=bucket_name + input_folder)
-                    st.write(s3_objects)
-                    file_keys = [obj["Key"] for obj in s3_objects["Contents"]]
-                    st.write(file_keys)
-                    # Create a thread pool for concurrent file processing
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        # Map the summarize_file function to each file key in the bucket
-                        try:
-                            file_keys = [obj["Key"] for obj in s3_objects["Contents"]]
-                            for file_key in file_keys:
-                                response = s3.get_object(
-                                    Bucket=bucket_name + input_folder, Key=file_key
+                    s3_client = boto3.client(
+                        's3',
+                        aws_access_key_id=get_var('aws_access_key_id'),
+                        aws_secret_access_key=get_var('aws_secret_access_key'),
+                        region_name=get_var('aws_region')
+                    )
+                    response = s3_client.list_objects_v2(
+                        Bucket=self.bucket_name,
+                        Prefix=self.input_prefix
+                    )
+                    if 'Contents' in response:
+                        for item in response['Contents']:
+                            file_key = item['Key']
+                            # skip folders
+                            if file_key.endswith('/'):
+                                continue
+                            try:
+                                file_obj = s3_client.get_object(
+                                    Bucket=self.bucket_name,
+                                    Key=file_key
                                 )
-                                text = response["Body"].read().decode("utf-8")
-                                st.write(text)
-                                generate_summary(text, placeholder)
-                                # Save the result text to the "output" folder in the same bucket
-                                output_key = output_folder + file_key
-                                s3.put_object(
-                                    Bucket=bucket_name,
-                                    Key=output_key,
-                                    Body=self.output.encode("utf-8"),
+                                text = ""
+                                output_file_key = file_key.replace(
+                                    self.input_prefix,
+                                    self.output_prefix
                                 )
-                        except Exception as e:
-                            return str(e)
+                                if file_key.endswith(".txt"):
+                                    text = file_obj['Body'].read().decode('utf-8')
+                                elif file_key.endswith(".pdf"):
+                                    pdf_stream = BytesIO(file_obj['Body'].read())
+                                    text = extract_text_from_pdf(pdf_stream, placeholder)
+                                    output_file_key = output_file_key.replace('.pdf', '.txt')
+                                if text > "":
+                                    token_number = get_token_size(text)
+                                    logger.info(f"Summarizing {file_key} ({token_number} tokens)")
+                                    generate_summary(text, placeholder)
+                                    s3_client.put_object(
+                                        Bucket=self.bucket_name,
+                                        Key=output_file_key,
+                                        Body=self.output
+                                    )
+                                else:
+                                    st.warning(
+                                        f"Die Datei {file.filename} hat nicht das richtige Format und ist leer oder konnte nicht gelesen werden."
+                                    )
+                            except Exception as e:
+                                st.warning(str(e))
+                        st.success(f"Alle Dateien wurden zusammengefasst und im Bucket {self.bucket_name}{self.output_prefix} abgelegt.")
+                        st.markdown(self.token_use_expression())
+                    else:
+                        st.write("No files in the bucket.")            

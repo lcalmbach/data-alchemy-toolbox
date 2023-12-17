@@ -9,6 +9,7 @@ import zipfile
 import random
 import logging
 import fitz
+import tiktoken
 
 LOCAL_HOST = "liestal"
 LOGFILE = "./data-alchemy-toolbox.log"
@@ -374,5 +375,20 @@ def get_text_from_binary(binary_content: io.BytesIO):
         except:
             return ""
 
+
+def get_token_size(text: str, base: str = "cl100k_base") -> int:
+    """
+    Calculates the number of tokens in the given text using the specified base encoding.
+
+    Args:
+        text (str): The input text.
+        base (str, optional): The base encoding to use. Defaults to "cl100k_base".
+
+    Returns:
+        int: The number of tokens in the text.
+    """
+    enc = tiktoken.get_encoding(base)
+    openai_tokens = enc.encode(text)
+    return len(openai_tokens)
 
 logger = init_logging(__name__, LOGFILE)
