@@ -292,6 +292,15 @@ class Anonymizer(ToolBase):
         )
 
     def run(self):
+        """
+        Runs the anonymization process.
+
+        If the current workstation is not a developer workstation, displays a warning message.
+        Otherwise, if the "Starten" button is clicked, initializes the anonymization engine and performs the anonymization process.
+
+        Returns:
+            None
+        """
         if get_hostname() not in DEV_WORKSTATIONS:
             st.warning(
                 """"Wir bitten um Entschuldigung. Diese Funktion ist nur auf den Entwickler-Workstations verfügbar. 
@@ -316,7 +325,7 @@ Cloud-Plattform übersteigt."""
                 registry.load_predefined_recognizers()
                 phone_recognizer_ch = predefined_recognizers.PhoneRecognizer(
                     supported_language="de",
-                    supported_regions=("US", "UK", "DE", "FR", "IT", "CH"),
+                    supported_regions=("DE", "CH"),
                 )
                 birthday_recognizer_ch = predefined_recognizers.DateRecognizer(
                     context=["birthday"], supported_language="de"

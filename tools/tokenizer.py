@@ -1,24 +1,13 @@
 import streamlit as st
-import zipfile
 import os
 import pandas as pd
-import io
 import tiktoken
 import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
-from enum import Enum
-import boto3
 from helper import (
     init_logging,
-    split_text,
-    check_file_type,
-    extract_text_from_pdf,
-    show_download_button,
-    zip_texts,
-    get_text_from_binary,
-    download_file_button,
 )
-import concurrent.futures
+from enum import Enum
 from const import LOGFILE, OUTPUT_PATH
 from tools.tool_base import ToolBase, MODEL_OPTIONS, MODEL_TOKEN_PRICING
 
@@ -26,8 +15,6 @@ nltk.download("punkt")
 logger = init_logging(__name__, LOGFILE)
 
 DEMO_FILE = "./data/demo/demo_summary.txt"
-# SYSTEM_PROMPT_TEMPLATE = "You will be provided with a text. Your task is to summarize the text in german. The summary should contain a maximum of {}"
-# LIMIT_OPTIONS = ["Zeichen", "Tokens", "Sätze"]
 FILE_FORMAT_OPTIONS = ["pdf", "txt"]
 INPUT_FORMAT_OPTIONS = ["Demo", "Eine Datei", "Mehrere Dateien gezippt", "S3-Bucket"]
 
@@ -69,6 +56,15 @@ class Tokenizer(ToolBase):
             self.text = file.read()
 
     def show_settings(self):
+        """
+        Displays the settings options for the tokenizer tool based on the selected input format.
+
+        The method prompts the user to select an input format and then presents the appropriate input options based on the selected format.
+        The available input formats include DEMO, FILE, ZIPPED_FILE, and S3.
+
+        Returns:
+            None
+        """
         self.model = self.get_model()
         self.input_format = st.selectbox(
             label="Input Format", options=INPUT_FORMAT_OPTIONS
@@ -104,6 +100,12 @@ class Tokenizer(ToolBase):
             )
 
     def run(self):
+        """
+        Executes the tokenization process based on the selected input format.
+        
+        Returns:
+            None
+        """
         if st.button("Analyse"):
             self.errors = []
             if (

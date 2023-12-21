@@ -1,5 +1,5 @@
 import streamlit as st
-import time
+import numpy as np
 from datetime import datetime
 from tools.tool_base import (
     ToolBase,
@@ -9,11 +9,9 @@ from tools.tool_base import (
     MAX_ERRORS,
 )
 import os
-import json
-import re
 import pandas as pd
 import altair as alt
-from helper import create_file, append_row, zip_files, get_var
+from helper import create_file, append_row, zip_files
 
 
 OUTPUT_LONG = "./data/output/output_{}.csv"
@@ -110,11 +108,10 @@ class Classifier(ToolBase):
             .size()
             .reset_index(name="count")
         )
-        # make sure cat_id is numeric: todo: make sure that this does not happen as the
-        # cat_id should be assigned to the default unknown category
+        # make sure cat_id is numeric.
         agg_df["cat_id"] = pd.to_numeric(agg_df["cat_id"], errors="coerce")
-        agg_df = agg_df.dropna(subset=["cat_id"])
-
+        agg_df['cat_id'].fillna(self.no_match_code, inplace=True)
+        agg_df["cat_id"] = agg_df["cat_id"].astype(int)
         agg_df["cat_code"] = agg_df["cat_id"].apply(lambda x: self.categories_dic[x])
         agg_df.to_csv(self.output_file_stat, sep=";")
         return agg_df
@@ -222,7 +219,7 @@ class Classifier(ToolBase):
                 if len(self.errors) == MAX_ERRORS:
                     break
 
-            placeholder.markdown(self.token_use_expression(tokens))
+            placeholder.markdown(self.token_use_expression())
             self.stats_df = self.calc_stats()
             self.show_stats()
             file_names = [
