@@ -14,10 +14,10 @@ from tools import (
     tokenizer,
 )
 
-__version__ = "0.0.11"
+__version__ = "0.0.12"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2023-12-15"
+VERSION_DATE = "2023-12-22"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"

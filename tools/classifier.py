@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import json
 from datetime import datetime
 from tools.tool_base import (
     ToolBase,
@@ -204,7 +205,7 @@ class Classifier(ToolBase):
                     )
                     append_row(self.output_file_long, [[index, text, str(indices)]])
                     append_row(
-                        self.output_file_short, [(index, item) for item in indices]
+                        self.output_file_short, [(index, item) for item in json.loads(indices)]
                     )
                     self.tokens_in += tokens[0]
                     self.tokens_out += tokens[1]

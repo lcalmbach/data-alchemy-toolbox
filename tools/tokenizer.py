@@ -3,10 +3,10 @@ import os
 import pandas as pd
 import tiktoken
 import nltk
+from io import BytesIO
+import zipfile
 from nltk.tokenize import word_tokenize, sent_tokenize
-from helper import (
-    init_logging,
-)
+from helper import init_logging, extract_text_from_pdf, get_text_from_binary
 from enum import Enum
 from const import LOGFILE, OUTPUT_PATH
 from tools.tool_base import ToolBase, MODEL_OPTIONS, MODEL_TOKEN_PRICING
@@ -16,7 +16,12 @@ logger = init_logging(__name__, LOGFILE)
 
 DEMO_FILE = "./data/demo/demo_summary.txt"
 FILE_FORMAT_OPTIONS = ["pdf", "txt"]
-INPUT_FORMAT_OPTIONS = ["Demo", "Eine Datei", "Mehrere Dateien gezippt", "S3-Bucket"]
+INPUT_FORMAT_OPTIONS = [
+    "Demo",
+    "Eine Datei (txt, pdf)",
+    "Mehrere Dateien gezippt",
+    "S3-Bucket",
+]
 
 
 class limitType(Enum):
@@ -77,10 +82,9 @@ class Tokenizer(ToolBase):
                 help="Geben Sie den Text ein, den Sie zusammenfassen möchten.",
             )
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.FILE.value:
-            formats = ",".join(FILE_FORMAT_OPTIONS)
             self.input_file = st.file_uploader(
                 "PDF oder Text Datei",
-                type=formats,
+                type=["pdf", "txt"],
                 help="Laden Sie die Datei hoch, die Sie zusammenfassen möchten.",
             )
         elif (
@@ -90,7 +94,7 @@ class Tokenizer(ToolBase):
             self.input_file = st.file_uploader(
                 "ZIP Datei",
                 type=["zip"],
-                help="Laden Sie die Datei hoch, die Sie zusammenfassen möchten. Die ZIP Datei darf Dateien im Format txt und pdf enthalten.",
+                help="Laden Sie die ZIP Datei hoch mit Dateien, die Sie zusammenfassen möchten. Die Datei muss Dateien im Format zip, txt und pdf enthalten.",
             )
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value:
             self.s3_input_bucket = st.text_input(
@@ -99,56 +103,87 @@ class Tokenizer(ToolBase):
                 help="Geben Sie die ARN des S3-Buckets ein, der die Dateien enthält, die Sie zusammenfassen möchten.",
             )
 
+    def analyse_text(self):
+        """
+        Analyzes the text by performing tokenization and calculating costs.
+
+        Returns:
+            None
+        """
+        enc = tiktoken.get_encoding("cl100k_base")
+        openai_tokens = enc.encode(self.text)
+        preis_4k = "{:.3f} USD".format(
+            len(openai_tokens) / 1000 * MODEL_TOKEN_PRICING[MODEL_OPTIONS[0]]["in"]
+        )
+        preis_16k = "{:.3f} USD".format(
+            len(openai_tokens) / 1000 * MODEL_TOKEN_PRICING[MODEL_OPTIONS[1]]["in"]
+        )
+        df = pd.DataFrame(
+            {
+                "key": [
+                    "Anzahl Sätze",
+                    "Anzahl Wörter",
+                    "Anzahl Tokens (OpenAi)",
+                    "Kosten (gpt-3.5-turbo 4K)",
+                    "Kosten (gpt-3.5-turbo 16K)",
+                ],
+                "value": [
+                    len(sent_tokenize(self.text)),
+                    len(self.text.split()),
+                    len(openai_tokens),
+                    preis_4k,
+                    preis_16k,
+                ],
+            }
+        )
+        self.html = df.to_html(index=False, header=False) + "<br>"
+
     def run(self):
         """
         Executes the tokenization process based on the selected input format.
-        
+
         Returns:
             None
         """
         if st.button("Analyse"):
+            placeholder = st.empty()
             self.errors = []
-            if (
-                INPUT_FORMAT_OPTIONS.index(self.input_format)
-                == InputFormat.DEMO.value
-            ):
-                enc = tiktoken.get_encoding("cl100k_base")
-                openai_tokens = enc.encode(self.text)
-                preis_4k = "{:.3f} USD".format(len(openai_tokens) / 1000 * MODEL_TOKEN_PRICING[MODEL_OPTIONS[0]]["in"])
-                preis_16k = "{:.3f} USD".format(len(openai_tokens) / 1000 * MODEL_TOKEN_PRICING[MODEL_OPTIONS[1]]["in"])
-                df = pd.DataFrame(
-                    {
-                        "key": [
-                            "Anzahl Sätze",
-                            "Anzahl Wörter",
-                            "Anzahl Tokens (OpenAi)",
-                            "Kosten (gpt-3.5-turbo 4K)",
-                            "Kosten (gpt-3.5-turbo 16K)"
-                        ],
-                        "value": [
-                            len(sent_tokenize(self.text)),
-                            len(self.text.split()),
-                            len(openai_tokens),
-                            preis_4k,
-                            preis_16k,
-                        ],
-                    }
-                )
-                self.html = df.to_html(index=False, header=False)
+            if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.DEMO.value:
+                self.analyse_text()
             elif (
-                INPUT_FORMAT_OPTIONS.index(self.input_format)
-                == InputFormat.FILE.value
+                INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.FILE.value
             ):
-                pass
+                self.text = extract_text_from_pdf(self.input_file, placeholder)
+                self.analyse_text()
             elif (
                 INPUT_FORMAT_OPTIONS.index(self.input_format)
                 == InputFormat.ZIPPED_FILE.value
             ):
-                pass
+                with zipfile.ZipFile(self.input_file, "r") as zip_ref:
+                    for file in zip_ref.infolist():
+                        self.text = ""
+                        st.markdown(file.filename)
+                        if file.filename.endswith(".pdf"):
+                            with zip_ref.open(file) as pdf_file:
+                                self.text = extract_text_from_pdf(pdf_file, placeholder)
+                        elif file.filename.endswith(".txt"):
+                            with zip_ref.open(file) as text_file:
+                                binary_content = text_file.read()
+                                self.text = get_text_from_binary(binary_content)
+                        if self.text > "":
+                            self.analyse_text()
+                            st.markdown(self.html, unsafe_allow_html=True)
+                        else:
+                            st.warning(
+                                f"Die Datei {file.filename} hat nicht das richtige Format und ist leer oder konnte nicht gelesen werden."
+                            )
+                st.success("Alle Dateien in wurden analysiert.")
             elif (
-                INPUT_FORMAT_OPTIONS.index(self.input_format)
-                == InputFormat.S3.value
+                INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value
             ) and (self.s3_input_bucket > ""):
                 pass
-        if self.html is not None:
+        if self.html is not None and INPUT_FORMAT_OPTIONS.index(self.input_format) in (
+            0,
+            1,
+        ):
             st.markdown(self.html, unsafe_allow_html=True)

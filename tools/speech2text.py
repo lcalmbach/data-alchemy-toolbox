@@ -54,20 +54,22 @@ class Speech2Text(ToolBase):
     def run(self):
         if st.button("Transkribieren"):
             with st.spinner("Transkribiere Audio..."):
-                self.text = self.transcribe(self.file)
-
-        if self.text != "":
-            st.markdown(self.text)
-            cols = st.columns(2, gap="small")
-            with cols[0]:
-                if st.button("📋 Text in Zwischenablage kopieren"):
-                    pyperclip.copy(
-                        self.text,
-                    )
-            with cols[1]:
-                st.download_button(
-                    label="⬇️ Datei herunterladen",
-                    data=self.text,
-                    file_name=OUTPUT_FILE,
-                    mime="text/plain",
-                )
+                if self.formats.index(self.input_type) == 0:
+                    self.text = self.transcribe(self.file)
+                    if self.text != "":
+                        st.markdown(self.text)
+                        cols = st.columns(2, gap="small")
+                        with cols[0]:
+                            if st.button("📋 Text in Zwischenablage kopieren"):
+                                pyperclip.copy(
+                                    self.text,
+                                )
+                        with cols[1]:
+                            st.download_button(
+                                label="⬇️ Datei herunterladen",
+                                data=self.text,
+                                file_name=OUTPUT_FILE,
+                                mime="text/plain",
+                            )
+                else:
+                    st.info("Diese Option ist noch nicht verfügbar.")

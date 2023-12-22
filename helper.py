@@ -332,7 +332,7 @@ def extract_text_from_pdf(input_file: io.BytesIO, placeholder) -> str:
     text = ""
     for page_number in range(pdf_document.page_count):
         page = pdf_document[page_number]
-        if placeholder:
+        if placeholder is not None:
             placeholder.write(f"Page {page_number} extracted")
         text += page.get_text()
     return text
