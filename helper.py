@@ -391,4 +391,16 @@ def get_token_size(text: str, base: str = "cl100k_base") -> int:
     openai_tokens = enc.encode(text)
     return len(openai_tokens)
 
+
+def save_uploadedfile(uploadedfile, path: str):
+    ok, err_msg = True, ""
+    try:
+        with open(os.path.join(path, uploadedfile.name), "wb") as f:
+            f.write(uploadedfile.getbuffer())
+    except Exception as e:
+        ok = False
+        err_msg = str(e)
+    return ok, err_msg
+
+
 logger = init_logging(__name__, LOGFILE)

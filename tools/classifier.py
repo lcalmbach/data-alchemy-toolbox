@@ -12,6 +12,7 @@ from tools.tool_base import (
 import os
 import pandas as pd
 import altair as alt
+from enum import Enum
 from helper import create_file, append_row, zip_files
 
 
@@ -21,6 +22,15 @@ OUTPUT_STAT = "./data/output/output_stat_{}.csv"
 OUTPUT_ZIP = "./data/output/output_{}.zip"
 OUTPUT_ERROR = "./data/output/output_error_{}.txt"
 DEFAULT_MODEL = "gpt-3.5-turbo"
+DEMO_TEXTS_FILE = "./data/demo/demo_texts.xlsx"
+DEMO_CATEORIES_FILE = "./data/demo/demo_categories.xlsx"
+
+
+class InputFormat(Enum):
+    DEMO = 0
+    FILE = 1
+    INTERACTIVE = 2
+
 
 SYSTEM_PROMPT_TEMPLATE = """You are a expert data classifier. You will be provided with a text. Your task is to assign the text to one to maximum {0} of the following categories: [{1}]\n
 Answer with a list of indexes of the matching categories for the given text. If none of the categories apply to the text return [{2}]. Always answer with a list of indices. The result list must only include numbers.\n
@@ -46,7 +56,12 @@ class Classifier(ToolBase):
         self.errors = []
         self.category_list_expression = ""
 
-        self.formats = ["Demo", "Upload csv/xlsx", "Interaktive Eingabe"]
+        self.texts_input = None
+        self.categories_input = None
+        self.categories_df = pd.DataFrame()
+        self.texts_df = pd.DataFrame()
+
+        self.formats = ["Demo", "csv/xlsx Datei hochladen", "Interaktive Eingabe"]
         self.input_type = self.formats[0]
         self.no_match_code = -99
         self.no_match_code_options = []
@@ -111,7 +126,7 @@ class Classifier(ToolBase):
         )
         # make sure cat_id is numeric.
         agg_df["cat_id"] = pd.to_numeric(agg_df["cat_id"], errors="coerce")
-        agg_df['cat_id'].fillna(self.no_match_code, inplace=True)
+        agg_df["cat_id"].fillna(self.no_match_code, inplace=True)
         agg_df["cat_id"] = agg_df["cat_id"].astype(int)
         agg_df["cat_code"] = agg_df["cat_id"].apply(lambda x: self.categories_dic[x])
         agg_df.to_csv(self.output_file_stat, sep=";")
@@ -128,32 +143,96 @@ class Classifier(ToolBase):
         st.markdown("**System Prompt**")
         st.markdown(self.system_prompt)
 
-    def show_settings(self):
-        self.input_type = st.radio("Input", options=self.formats)
+    def get_nomatch_code(self):
+        self.no_match_code = st.selectbox(
+            "Code für keine Übereinstimmung",
+            options=self.categories_dic.keys(),
+            format_func=lambda x: self.categories_dic[x],
+            help="Wähle einen Code, der zurückgegeben wird, wenn keine Übereinstimmung gefunden wurde.",
+        )
 
-        if self.formats.index(self.input_type) == 0:
-            self.texts_df = pd.read_excel("./data/demo/demo_texts.xlsx")
+    def show_settings(self):
+        def manage_demo():
+            self.texts_df = pd.read_excel(DEMO_TEXTS_FILE)
             self.texts_df.columns = ["text_id", "text"]
-            categories_df = pd.read_excel("./data/demo/demo_categories.xlsx")
+            categories_df = pd.read_excel(DEMO_CATEORIES_FILE)
             categories_df.columns = ["cat_id", "text"]
             self.categories_dic = dict(
                 zip(categories_df["cat_id"], categories_df["text"])
             )
-            self.max_categories = st.number_input(
-                "Maximale Anzahl Kategorien",
-                min_value=1,
-                max_value=10,
-                value=3,
-                step=1,
-            )
-            self.no_match_code = st.selectbox(
-                "Code für keine Übereinstimmung",
-                options=self.categories_dic.keys(),
-                format_func=lambda x: self.categories_dic[x],
-                help="Wählen Sie den Code, der zurückgegeben wird, wenn keine Übereinstimmung gefunden wurde.",
-            )
+            self.get_nomatch_code()
             self.preview_data()
 
+        def manage_file_upload():
+            # texts
+            self.texts_input = st.file_uploader(
+                "Texte",
+                type=["xlsx", "csv"],
+                help="Lade die Datei hoch, welche die Texte enthält. Du findest in der untenstehenden Box ein Beispiel für die Struktur der Datei.",
+            )
+            if self.texts_input is None:
+                with st.expander("Demo-Texte", expanded=False):
+                    df = pd.read_excel(DEMO_TEXTS_FILE, index_col=0)
+                    st.dataframe(df.head())
+            else:
+                with st.expander(f"Preview ({self.texts_input.name})", expanded=False):
+                    if self.texts_input.name.endswith(".xlsx"):
+                        self.texts_df = pd.read_excel(self.texts_input)
+                    elif self.texts_input.name.endswith(".csv"):
+                        self.texts_df = pd.read_csv(self.texts_input)
+                    self.texts_df.columns = ["text_id", "text"]
+                    st.dataframe(self.texts_df, hide_index=True)
+
+            # categories
+            self.categories_input = st.file_uploader(
+                "Kategorieen",
+                type=["xlsx", "csv"],
+                help="Lade die Datei hoch, welche die Kategorien enthält. Du findest in der untenstehenden Box ein Beispiel für die Struktur der Datei.",
+            )
+            if self.categories_input is None:
+                with st.expander("Demo-Kategorien", expanded=False):
+                    df = pd.read_excel(DEMO_CATEORIES_FILE, index_col=0)
+                    st.dataframe(df.head())
+            else:
+                with st.expander(self.categories_input.name, expanded=False):
+                    if self.categories_input.name.endswith(".xlsx"):
+                        self.categories_df = pd.read_excel(self.categories_input)
+                    elif self.categories_input.name.endswith(".csv"):
+                        self.categories_df = pd.read_csv(self.categories_input)
+                    self.categories_df.columns = ["cat_id", "text"]
+                    self.categories_dic = dict(
+                        zip(self.categories_df["cat_id"], self.categories_df["text"])
+                    )
+                    st.dataframe(self.categories_df)
+                self.get_nomatch_code()
+
+        def manage_interactive():
+            self.texts_input = st.text_area(
+                "Text",
+                help="Gib einen Text ein, welchen du klassifizieren möchtest.",
+            )
+            self.categories_input = st.text_area(
+                "Kategoriesn",
+                help="Gib eine Komma-separierte Liste von Kategorien ein, welche du für die Klassifizierung verwenden möchtest.",
+            )
+
+        # ------------------------------------------------------------
+        # main
+        # ------------------------------------------------------------
+        self.input_type = st.radio("Input", options=self.formats)
+        self.max_categories = st.number_input(
+            "Maximale Anzahl Kategorien",
+            min_value=1,
+            max_value=10,
+            value=3,
+            step=1,
+        )
+        if self.formats.index(self.input_type) == InputFormat.DEMO.value:
+            manage_demo()
+        elif self.formats.index(self.input_type) == InputFormat.FILE.value:
+            manage_file_upload()
+        elif self.formats.index(self.input_type) == InputFormat.INTERACTIVE.value:
+            manage_interactive()
         else:
             st.warning("Diese Option wird noch nicht unterstützt.")
 
@@ -183,7 +262,10 @@ class Classifier(ToolBase):
             ValueError: If the 'OPENAI_API_KEY' environment variable is not
             set.
         """
-        if st.button("Klassifizieren"):
+        enabled = (self.formats.index(self.input_type) == InputFormat.FILE.value) and (
+            self.texts_input is not None and self.categories_dic is not None
+        )
+        if st.button("Klassifizieren", enabled=enabled):
             cnt = 1
             self.errors = []
 
@@ -205,7 +287,8 @@ class Classifier(ToolBase):
                     )
                     append_row(self.output_file_long, [[index, text, str(indices)]])
                     append_row(
-                        self.output_file_short, [(index, item) for item in json.loads(indices)]
+                        self.output_file_short,
+                        [(index, item) for item in json.loads(indices)],
                     )
                     self.tokens_in += tokens[0]
                     self.tokens_out += tokens[1]

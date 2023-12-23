@@ -14,7 +14,7 @@ from helper import (
     get_text_from_binary,
     download_file_button,
     get_var,
-    get_token_size
+    get_token_size,
 )
 from const import LOGFILE, OUTPUT_PATH
 from tools.tool_base import ToolBase, MODEL_OPTIONS
@@ -95,7 +95,7 @@ class Summary(ToolBase):
                 index=0,
                 help="Wähle die Einheit der Limite, die du verwenden möchtest.",
             )
-        
+
         if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.DEMO.value:
             self.text = st.text_area(
                 "Demo Text für die Zusammenfassung",
@@ -161,13 +161,15 @@ class Summary(ToolBase):
                 self.tokens_out += tokens[1]
             self.limit_number = buffer_number
             self.limit_type = buffer_type
-            
+
             # generate a summary for all chunks
             text = " ".join(output_chunks)
             # make sure the summary is not longer than the limit
             input_chunks = split_text(text, chunk_size=self.chunk_size())
             if len(input_chunks) > 1:
-                logger.info(f"Summary too long after summarizing the document in chunks. Only the first {self.chunk_size()} of {get_token_size(text)} tokens were used for summary.")
+                logger.info(
+                    f"Summary too long after summarizing the document in chunks. Only the first {self.chunk_size()} of {get_token_size(text)} tokens were used for summary."
+                )
             self.output, tokens = self.get_completion(text=input_chunks[0], index=0)
             self.tokens_in += tokens[0]
             self.tokens_out += tokens[1]
@@ -244,45 +246,48 @@ class Summary(ToolBase):
                     == InputFormat.S3.value
                 ) and (self.s3_input_bucket > ""):
                     s3_client = boto3.client(
-                        's3',
-                        aws_access_key_id=get_var('aws_access_key_id'),
-                        aws_secret_access_key=get_var('aws_secret_access_key'),
-                        region_name=get_var('aws_region')
+                        "s3",
+                        aws_access_key_id=get_var("aws_access_key_id"),
+                        aws_secret_access_key=get_var("aws_secret_access_key"),
+                        region_name=get_var("aws_region"),
                     )
                     response = s3_client.list_objects_v2(
-                        Bucket=self.bucket_name,
-                        Prefix=self.input_prefix
+                        Bucket=self.bucket_name, Prefix=self.input_prefix
                     )
-                    if 'Contents' in response:
-                        for item in response['Contents']:
-                            file_key = item['Key']
+                    if "Contents" in response:
+                        for item in response["Contents"]:
+                            file_key = item["Key"]
                             # skip folders
-                            if file_key.endswith('/'):
+                            if file_key.endswith("/"):
                                 continue
                             try:
                                 file_obj = s3_client.get_object(
-                                    Bucket=self.bucket_name,
-                                    Key=file_key
+                                    Bucket=self.bucket_name, Key=file_key
                                 )
                                 text = ""
                                 output_file_key = file_key.replace(
-                                    self.input_prefix,
-                                    self.output_prefix
+                                    self.input_prefix, self.output_prefix
                                 )
                                 if file_key.endswith(".txt"):
-                                    text = file_obj['Body'].read().decode('utf-8')
+                                    text = file_obj["Body"].read().decode("utf-8")
                                 elif file_key.endswith(".pdf"):
-                                    pdf_stream = BytesIO(file_obj['Body'].read())
-                                    text = extract_text_from_pdf(pdf_stream, placeholder)
-                                    output_file_key = output_file_key.replace('.pdf', '.txt')
+                                    pdf_stream = BytesIO(file_obj["Body"].read())
+                                    text = extract_text_from_pdf(
+                                        pdf_stream, placeholder
+                                    )
+                                    output_file_key = output_file_key.replace(
+                                        ".pdf", ".txt"
+                                    )
                                 if text > "":
                                     token_number = get_token_size(text)
-                                    logger.info(f"Summarizing {file_key} ({token_number} tokens)")
+                                    logger.info(
+                                        f"Summarizing {file_key} ({token_number} tokens)"
+                                    )
                                     generate_summary(text, placeholder)
                                     s3_client.put_object(
                                         Bucket=self.bucket_name,
                                         Key=output_file_key,
-                                        Body=self.output
+                                        Body=self.output,
                                     )
                                 else:
                                     st.warning(
@@ -290,7 +295,9 @@ class Summary(ToolBase):
                                     )
                             except Exception as e:
                                 st.warning(str(e))
-                        st.success(f"Alle Dateien wurden zusammengefasst und im Bucket {self.bucket_name}{self.output_prefix} abgelegt.")
+                        st.success(
+                            f"Alle Dateien wurden zusammengefasst und im Bucket {self.bucket_name}{self.output_prefix} abgelegt."
+                        )
                         st.markdown(self.token_use_expression())
                     else:
-                        st.write("No files in the bucket.")            
+                        st.write("No files in the bucket.")
