@@ -140,8 +140,8 @@ class Classifier(ToolBase):
             st.dataframe(self.texts_df)
         with st.expander("Kategorien", expanded=False):
             st.dataframe(self.categories_dic)
-        st.markdown("**System Prompt**")
-        st.markdown(self.system_prompt)
+        with st.expander("System Prompt", expanded=False):
+            st.markdown(self.system_prompt)
 
     def get_nomatch_code(self):
         self.no_match_code = st.selectbox(
@@ -211,10 +211,13 @@ class Classifier(ToolBase):
                 "Text",
                 help="Gib einen Text ein, welchen du klassifizieren möchtest.",
             )
+            self.texts_df = pd.DataFrame({"text_id:": [0], "text": [self.texts_input]})
             self.categories_input = st.text_area(
                 "Kategoriesn",
                 help="Gib eine Komma-separierte Liste von Kategorien ein, welche du für die Klassifizierung verwenden möchtest.",
             )
+            cats = self.categories_input.split(",")
+            self.categories_dic = dict(zip(range(len(cats)), cats))
 
         # ------------------------------------------------------------
         # main
@@ -248,6 +251,12 @@ class Classifier(ToolBase):
         )
         st.altair_chart(bar_chart, use_container_width=True)
 
+    def check_input(self):
+        ok = (self.formats.index(self.input_type) == InputFormat.DEMO.value) or (
+            self.texts_input is not None and self.categories_dic is not None
+        )
+        return ok
+
     def run(self):
         """
         Runs the GPT-3 API on each row of the input DataFrame and categorizes
@@ -262,63 +271,80 @@ class Classifier(ToolBase):
             ValueError: If the 'OPENAI_API_KEY' environment variable is not
             set.
         """
-        enabled = (self.formats.index(self.input_type) == InputFormat.FILE.value) and (
-            self.texts_input is not None and self.categories_dic is not None
-        )
-        if st.button("Klassifizieren", enabled=enabled):
-            cnt = 1
-            self.errors = []
+        ok = self.check_input()
+        if st.button("Klassifizieren", disabled=(ok == False)):
+            if self.formats.index(self.input_type) < InputFormat.INTERACTIVE.value:
+                cnt = 1
+                self.errors = []
 
-            create_file(self.output_file_long, ["text_id", "text", "result"])
-            create_file(self.output_file_short, ["text_id", "cat_id"])
-            create_file(self.output_errors, ["time", "text_id", "error_message"])
-            placeholder = st.empty()
-            for index, row in self.texts_df.iterrows():
-                text = (
-                    row["text"]
-                    .replace(chr(13), " ")
-                    .replace(chr(10), " ")
-                    .replace(";", " ")
+                create_file(self.output_file_long, ["text_id", "text", "result"])
+                create_file(self.output_file_short, ["text_id", "cat_id"])
+                create_file(self.output_errors, ["time", "text_id", "error_message"])
+                placeholder = st.empty()
+                for index, row in self.texts_df.iterrows():
+                    text = (
+                        row["text"]
+                        .replace(chr(13), " ")
+                        .replace(chr(10), " ")
+                        .replace(";", " ")
+                    )
+                    indices, tokens = self.get_completion(text, index)
+                    if len(indices) > 0:
+                        placeholder.write(
+                            f"Result {cnt}/{len(self.texts_df)}: {text[:50] + '...'}, index= {index}, output: {indices} "
+                        )
+                        append_row(self.output_file_long, [[index, text, str(indices)]])
+                        append_row(
+                            self.output_file_short,
+                            [(index, item) for item in json.loads(indices)],
+                        )
+                        self.tokens_in += tokens[0]
+                        self.tokens_out += tokens[1]
+                        cnt += 1
+                    else:
+                        placeholder.write(
+                            f"Error {cnt}/{len(self.texts_df)}: {text[:50] + '...'}, index= {index}"
+                        )
+                        self.errors.append(index)
+
+                    # if loop has failed 3 times quit
+                    if len(self.errors) == MAX_ERRORS:
+                        break
+
+                placeholder.markdown(self.token_use_expression())
+                self.stats_df = self.calc_stats()
+                self.show_stats()
+                file_names = [
+                    self.output_file_long,
+                    self.output_file_short,
+                    self.output_file_stat,
+                    self.output_errors,
+                ]
+                zip_files(file_names, self.output_file_zip)
+                if os.path.exists(self.output_file_zip):
+                    with open(self.output_file_zip, "rb") as fp:
+                        btn = st.download_button(
+                            label="Herunterladen",
+                            data=fp,
+                            file_name=self.output_file_zip,
+                            mime="application/zip",
+                            help="Klicken Sie auf den Button, um die Ergebnisse der Klassifizierung herunterzuladen.",
+                        )
+            else:
+                text = st.text_area(
+                    "Text", value=self.texts_df.iloc[0]["text"], disabled=True
                 )
-                indices, tokens = self.get_completion(text, index)
+                cats = st.multiselect(
+                    "Kategorien",
+                    options=self.categories_dic.values(),
+                    default=self.categories_dic.values(),
+                    disabled=True,
+                )
+                indices, tokens = self.get_completion(text, 0)
+                indices = json.loads(indices)
                 if len(indices) > 0:
-                    placeholder.write(
-                        f"Result {cnt}/{len(self.texts_df)}: {text[:50] + '...'}, index= {index}, output: {indices} "
-                    )
-                    append_row(self.output_file_long, [[index, text, str(indices)]])
-                    append_row(
-                        self.output_file_short,
-                        [(index, item) for item in json.loads(indices)],
-                    )
-                    self.tokens_in += tokens[0]
-                    self.tokens_out += tokens[1]
-                    cnt += 1
+                    st.markdown("---\nZugeordnete Kategorien:")
+                    for idx in indices:
+                        st.markdown(f"- {self.categories_dic[idx]}")
                 else:
-                    placeholder.write(
-                        f"Error {cnt}/{len(self.texts_df)}: {text[:50] + '...'}, index= {index}"
-                    )
-                    self.errors.append(index)
-
-                # if loop has failed 3 times quit
-                if len(self.errors) == MAX_ERRORS:
-                    break
-
-            placeholder.markdown(self.token_use_expression())
-            self.stats_df = self.calc_stats()
-            self.show_stats()
-            file_names = [
-                self.output_file_long,
-                self.output_file_short,
-                self.output_file_stat,
-                self.output_errors,
-            ]
-            zip_files(file_names, self.output_file_zip)
-            if os.path.exists(self.output_file_zip):
-                with open(self.output_file_zip, "rb") as fp:
-                    btn = st.download_button(
-                        label="Herunterladen",
-                        data=fp,
-                        file_name=self.output_file_zip,
-                        mime="application/zip",
-                        help="Klicken Sie auf den Button, um die Ergebnisse der Klassifizierung herunterzuladen.",
-                    )
+                    st.markdown("Keine Übereinstimmung gefunden.")

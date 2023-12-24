@@ -400,6 +400,7 @@ def save_uploadedfile(uploadedfile, path: str):
     except Exception as e:
         ok = False
         err_msg = str(e)
+        logger.error(err_msg)
     return ok, err_msg
 
 
