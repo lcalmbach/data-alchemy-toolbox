@@ -4,9 +4,7 @@ import json
 from datetime import datetime
 from tools.tool_base import (
     ToolBase,
-    SLEEP_TIME_AFTER_ERROR,
     MODEL_OPTIONS,
-    LLM_RETRIES,
     MAX_ERRORS,
 )
 import os

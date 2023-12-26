@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import io
 import os
+from io import StringIO
 import socket
 import string
 import csv
@@ -10,6 +11,8 @@ import random
 import logging
 import fitz
 import tiktoken
+import base64
+import requests
 
 LOCAL_HOST = "liestal"
 LOGFILE = "./data-alchemy-toolbox.log"
@@ -317,25 +320,84 @@ def check_file_type(uploaded_file):
     return type
 
 
-def extract_text_from_pdf(input_file: io.BytesIO, placeholder) -> str:
+def extract_text_from_url(url: str):
     """
-    Extracts text from a PDF document.
+    Extracts text from a PDF file given its URL. The file must have a PDF or text 
+    content type.
 
     Args:
-        input_file (BytesIO): The input PDF file.
-        placeholder: A placeholder object to write extraction progress.
+        url (str): The URL of the PDF file.
 
     Returns:
-        str: The extracted text from the PDF document.
+        str: The extracted text from the PDF file.
+            If the file type is unsupported or not a PDF, returns "Unsupported file 
+            type or not a PDF".
     """
-    pdf_document = fitz.open(stream=input_file.read(), filetype="pdf")
-    text = ""
-    for page_number in range(pdf_document.page_count):
-        page = pdf_document[page_number]
-        if placeholder is not None:
-            placeholder.write(f"Page {page_number} extracted")
-        text += page.get_text()
-    return text
+    response = requests.get(url)
+    response.raise_for_status()  # Ensure the request was successful
+
+    content_type = response.headers['Content-Type']
+    if 'text/plain' in content_type:
+        return response.text
+    elif 'application/pdf' in content_type:
+        with fitz.open("pdf", response.content) as doc:
+            text = ''
+            for page in doc:
+                text += page.get_text()
+            return text
+    else:
+        return "Unsupported file type or not a PDF"
+
+
+def extract_text_from_file(file_path: str) -> str:
+    """
+    Extracts text from a file. The file can be of type pdf of text.
+
+    Args:
+        file_path (str): The path to the file.
+
+    Returns:
+        str: The extracted text from the file.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        ValueError: If the file extension is not supported.
+    """
+    _, file_extension = os.path.splitext(file_path)
+
+    if file_extension.lower() == '.pdf':
+        # Process PDF file
+        with fitz.open(file_path) as doc:
+            text = ''
+            for page in doc:
+                text += page.get_text()
+            return text
+    elif file_extension.lower() in ['.txt', '.text']:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
+    else:
+        raise ValueError("Unsupported file type")
+
+
+def extract_text_from_uploaded_file(uploaded_file: io.BytesIO) -> str:
+    # Check the file type
+    if uploaded_file.type == "application/pdf":
+        # Process PDF file
+        with fitz.open(stream=uploaded_file.read(), filetype="pdf") as doc:
+            text = ''
+            for page in doc:
+                text += page.get_text()
+            return text
+
+    elif uploaded_file.type in ["text/plain", "text/csv"]:
+        # Process text file
+        # Assuming the text file is encoded in 'utf-8'
+        stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+        text = stringio.read()
+        return text
+
+    else:
+        return "Unsupported file type"
 
 
 def show_download_button(
@@ -372,7 +434,8 @@ def get_text_from_binary(binary_content: io.BytesIO):
             return binary_content.decode("cp1252")
         except UnicodeDecodeError:
             return binary_content.decode("latin1")
-        except:
+        except Exception as e:
+            logger.error(str(e))
             return ""
 
 
@@ -392,6 +455,11 @@ def get_token_size(text: str, base: str = "cl100k_base") -> int:
     return len(openai_tokens)
 
 
+def save_uploaded_image(uploaded_file, path: str):
+    with open(os.path.join(path, uploaded_file.name), "wb") as f:
+        f.write(uploaded_file.getvalue())
+
+
 def save_uploadedfile(uploadedfile, path: str):
     ok, err_msg = True, ""
     try:
@@ -402,6 +470,28 @@ def save_uploadedfile(uploadedfile, path: str):
         err_msg = str(e)
         logger.error(err_msg)
     return ok, err_msg
+
+
+def encode_image(image_path: str):
+    """
+    Encodes an image file to base64.
+
+    Args:
+        image_path (str): The path to the image file.
+
+    Returns:
+        str: The base64 encoded image.
+
+    """
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+
+def convert_df_to_csv(df):
+    # Convert DataFrame to CSV
+    output = StringIO()
+    df.to_csv(output, index=False)
+    return output.getvalue()
 
 
 logger = init_logging(__name__, LOGFILE)

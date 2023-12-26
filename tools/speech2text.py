@@ -1,19 +1,17 @@
 import streamlit as st
 import os
-from tools.tool_base import ToolBase
 from moviepy.editor import VideoFileClip
 from openai import OpenAI
 import pyperclip
 from enum import Enum
 import zipfile
 
-from helper import get_var, check_file_type, save_uploadedfile
+from helper import get_var, save_uploadedfile
+from tools.tool_base import ToolBase, TEMP_PATH, OUTPUT_PATH, DEMO_PATH
 
-AUDIO_DEMO_FILE = "./data/demo/demo_audio.mp3"
-AUDIO_TEMP_FILE = "./data/temp/temp_audio."
-TEMP_DIR = "./data/temp/"
-OUTPUT_PATH = "./data/output/"
-OUTPUT_FILE = "./output/audio_output.txt"
+DEMO_FILE = DEMO_PATH + "demo_audio.mp3"
+TEMP_FILE = TEMP_PATH + "temp_audio."
+OUTPUT_FILE = OUTPUT_PATH + "audio_output.txt"
 FILE_FORMAT_OPTIONS = ["mp4", "mp3"]
 
 
@@ -36,40 +34,40 @@ class Speech2Text(ToolBase):
         self.text = ""
 
     def show_settings(self):
-            """
-            Zeigt die Einstellungen für Speech2Text an.
+        """
+        Zeigt die Einstellungen für Speech2Text an.
 
-            Diese Methode ermöglicht es dem Benutzer, den Eingabeformaten für Speech2Text auszuwählen und die entsprechenden Aktionen 
-            basierend auf dem ausgewählten Eingabetyp zu verarbeiten. Eingabetypen sind Demo (fixed demo Datei), User lädt mp3/4 Datei 
-            hoch und: User lädt gezippte Datei mit mp3, mp4 Dateien hoch.
+        Diese Methode ermöglicht es dem Benutzer, den Eingabeformaten für Speech2Text auszuwählen und die entsprechenden Aktionen
+        basierend auf dem ausgewählten Eingabetyp zu verarbeiten. Eingabetypen sind Demo (fixed demo Datei), User lädt mp3/4 Datei
+        hoch und: User lädt gezippte Datei mit mp3, mp4 Dateien hoch.
 
-            Returns:
-                None
-            """
-            self.input_type = st.radio("Input für Speech2Text", options=self.formats)
-            if self.formats.index(self.input_type) == InputFormat.DEMO.value:
-                self.output_file = AUDIO_DEMO_FILE
-                st.audio(AUDIO_DEMO_FILE)
-            elif self.formats.index(self.input_type) == InputFormat.FILE.value:
-                self.input_file = st.file_uploader(
-                    "MP4 oder MP3 Datei hochladen",
-                    type=FILE_FORMAT_OPTIONS,
-                    help="Lade die Datei hoch, die du transkribieren möchtest.",
-                )
-                if self.input_file is not None:
-                    file = TEMP_DIR + self.input_file.name
-                    ok, err_msg = save_uploadedfile(self.input_file, TEMP_DIR)
-                    if ok:
-                        self.output_file = file
-                        st.audio(self.output_file)
-                else:
-                    st.error(err_msg)
-            elif self.formats.index(self.input_type) == InputFormat.ZIPPED_FILE.value:
-                self.input_file = st.file_uploader(
-                    "ZIP Datei mit gezippten MP4 oder MP3 Dateien hochladen",
-                    type=["zip"],
-                    help="Lade die ZIP Datei hoch, welche die zu transkribierenden Dateien enthält. Achtung, die Datei darf nicht grösser als 200 MB sein.",
-                )
+        Returns:
+            None
+        """
+        self.input_type = st.radio("Input für Speech2Text", options=self.formats)
+        if self.formats.index(self.input_type) == InputFormat.DEMO.value:
+            self.output_file = DEMO_FILE
+            st.audio(DEMO_FILE)
+        elif self.formats.index(self.input_type) == InputFormat.FILE.value:
+            self.input_file = st.file_uploader(
+                "MP4 oder MP3 Datei hochladen",
+                type=FILE_FORMAT_OPTIONS,
+                help="Lade die Datei hoch, die du transkribieren möchtest.",
+            )
+            if self.input_file is not None:
+                file = TEMP_PATH + self.input_file.name
+                ok, err_msg = save_uploadedfile(self.input_file, TEMP_PATH)
+                if ok:
+                    self.output_file = file
+                    st.audio(self.output_file)
+            else:
+                st.error(err_msg)
+        elif self.formats.index(self.input_type) == InputFormat.ZIPPED_FILE.value:
+            self.input_file = st.file_uploader(
+                "ZIP Datei mit gezippten MP4 oder MP3 Dateien hochladen",
+                type=["zip"],
+                help="Lade die ZIP Datei hoch, welche die zu transkribierenden Dateien enthält. Achtung, die Datei darf nicht grösser als 200 MB sein.",
+            )
 
     def extract_audio_from_video(self, video_file: str) -> str:
         audio_file_name = video_file.replace(".mp4", ".mp3")
@@ -107,12 +105,12 @@ class Speech2Text(ToolBase):
                         self.output_file = os.path.join(OUTPUT_PATH, "transcribed.zip")
                         with zipfile.ZipFile(self.output_file, "w") as out_zip:
                             for file_name in zip_ref.namelist():
-                                zip_ref.extract(file_name, TEMP_DIR)
+                                zip_ref.extract(file_name, TEMP_PATH)
                                 transcribed_text = self.transcribe(
-                                    os.path.join(TEMP_DIR, file_name)
+                                    os.path.join(TEMP_PATH, file_name)
                                 )
                                 txt_filename = os.path.splitext(file_name)[0] + ".txt"
-                                txt_path = os.path.join(TEMP_DIR, txt_filename)
+                                txt_path = os.path.join(TEMP_PATH, txt_filename)
                                 with open(txt_path, "w") as txt_file:
                                     txt_file.write(transcribed_text)
                                 out_zip.write(txt_path, arcname=txt_filename)
@@ -145,4 +143,3 @@ class Speech2Text(ToolBase):
                 file_name=self.output_file,
                 mime="application/zip",
             )
-

@@ -8,6 +8,9 @@ import tiktoken
 
 MAX_ERRORS = 3
 LLM_RETRIES = 3
+TEMP_PATH = "./data/temp/"
+OUTPUT_PATH = "./data/output/"
+DEMO_PATH = "./data/demo/"
 SLEEP_TIME_AFTER_ERROR = 30
 DEFAULT_TEMPERATURE = 0.3
 DEFAULT_MAX_TOKENS = 500

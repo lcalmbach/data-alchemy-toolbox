@@ -1,0 +1,27 @@
+key;value;translation
+welcome; Willkommen;Welcome
+info; Info;Information
+members; Mitgliedschaften;Memberships
+member_name; Mitglied Name;Member Name
+filter; Filter;Filter
+all; Alle;All
+membership_status; Mitglied Status;Member Status
+voting_district; Wahlkreis;Constituency
+committee_type; Gremiumstyp;Type of committee
+matter_type; Geschäftstyp;Business type
+committee_members; Mitgliedschaften des Gremiums;Memberships of the committee
+parliament_committees; Gremien des grossen Rats;Committees of the Grand Council
+parliament_members; Mitglieder des Grossen Rates;Members of the Grand Council
+matter; Geschäft;Business
+in_progress; In Bearbeitung;In progress
+closed; Abgeschlossen;Completed
+all_info_docs_matter; Alle Informationen und Dokumente zum Geschäft;All information and documents regarding the business.
+document; Dokument;Document
+direct_link_pdf; Direkt-Link auf PDF-Dokument;Direct link to PDF document
+text; Text;I'm sorry, but you haven't provided any text to be translated. Please provide the German text you would like me to translate into English.
+word_cloud; Wortwolke;Word cloud
+pol_initiatives; Politische Vorstösse des Grossen Rats;Political initiatives of the Grand Council
+theme; Thema;Topic
+party; Partei;Party
+loading_data; Daten werden geladen...;Data is being loaded...
+documents; Dokumente;Documents

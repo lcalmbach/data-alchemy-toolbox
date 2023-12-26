@@ -8,7 +8,7 @@ from helper import (
     init_logging,
     split_text,
     check_file_type,
-    extract_text_from_pdf,
+    extract_text_from_uploaded_file,
     show_download_button,
     zip_texts,
     get_text_from_binary,
@@ -192,7 +192,7 @@ class Summary(ToolBase):
                 ):
                     if self.input_file:
                         if check_file_type(self.input_file) == "pdf":
-                            text = extract_text_from_pdf(self.input_file)
+                            text = extract_text_from_uploaded_file(self.input_file)
                             generate_summary(text, placeholder)
                             show_summary_text_field()
                 elif (
@@ -211,7 +211,7 @@ class Summary(ToolBase):
                                     )
                                     if file.filename.endswith(".pdf"):
                                         with zip_ref.open(file) as pdf_file:
-                                            text = extract_text_from_pdf(
+                                            text = extract_text_from_uploaded_file(
                                                 pdf_file, placeholder
                                             )
                                             out_filename = file.filename.replace(
@@ -272,7 +272,7 @@ class Summary(ToolBase):
                                     text = file_obj["Body"].read().decode("utf-8")
                                 elif file_key.endswith(".pdf"):
                                     pdf_stream = BytesIO(file_obj["Body"].read())
-                                    text = extract_text_from_pdf(
+                                    text = extract_text_from_uploaded_file(
                                         pdf_stream, placeholder
                                     )
                                     output_file_key = output_file_key.replace(
@@ -291,7 +291,7 @@ class Summary(ToolBase):
                                     )
                                 else:
                                     st.warning(
-                                        f"Die Datei {file.filename} hat nicht das richtige Format und ist leer oder konnte nicht gelesen werden."
+                                        f"Die Datei {file.filename} hat nicht das richtige Format, ist leer oder konnte nicht gelesen werden."
                                     )
                             except Exception as e:
                                 st.warning(str(e))
