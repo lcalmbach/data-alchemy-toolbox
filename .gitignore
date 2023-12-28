@@ -1,4 +1,7 @@
 env
+work
+__pychache__
 test*.*
 ./output/*.csv
 ./output/*.csv
+
