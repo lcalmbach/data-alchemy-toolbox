@@ -18,6 +18,7 @@ URL_ROOT = "https://images-datbx.s3.eu-central-1.amazonaws.com/"
 FILE_FORMAT_OPTIONS = ["jpg", "jpeg", "png", "gif"]
 DEMO_FILE = DEMO_PATH + "demo_images.csv"
 
+
 class InputFormat(Enum):
     DEMO = 0
     FILE = 1

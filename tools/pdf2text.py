@@ -1,27 +1,43 @@
 import streamlit as st
 import os
-from tools.tool_base import ToolBase
-import fitz
-import requests
 import pyperclip
 from moviepy.editor import *
+from enum import Enum
+import re
+
+from tools.tool_base import ToolBase
+from helper import extract_text_from_uploaded_file, extract_text_from_url
+
 
 ENCODING_OPTIONS = ["utf-8", "latin1", "cp1252"]
+FILE_FORMAT_OPTIONS = ["pdf"]
+
+
+class InputFormat(Enum):
+    FILE = 0
+    URL = 1
+    ZIPPED_FILE = 2
+    S3 = 3
 
 
 class Pdf2Text(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
         self.title = "PDF zu Text"
-        self.formats = ["PDF Datei", "Sammlung von PDF-Dateien (zip)"]
-        self.text = ""
+        self.formats = [
+            "PDF Datei hochladen",
+            "URL",
+            "Sammlung von PDF-Dateien (zip)",
+            "S3 Bucket",
+        ]
+        self.text = None
         self.encoding_source = "utf-8"
         self.encoding_target = "utf-8"
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
 
     def show_settings(self):
-        self.input_type = st.radio("Input für PDF2Text", options=self.formats)
+        self.input_type = st.radio("Input Format", options=self.formats)
         self.remove_crlf = st.checkbox("Zeilenendezeichen entfernen")
         self.remove_sep = st.checkbox(";-Zeichen entfernen")
 
@@ -31,62 +47,35 @@ class Pdf2Text(ToolBase):
         self.encoding_target = st.selectbox(
             label="Ziel-Encoding", options=ENCODING_OPTIONS
         )
-        if self.formats.index(self.input_type) == 0:
-            self.file = st.file_uploader("Datei hochladen")
-        elif self.formats.index(self.input_type) == 1:
-            ...
-        elif self.formats.index(self.input_type) == 2:
-            ...
-
-    def extract_text_from_pdf(self, file):
-        """
-        Extracts text from a PDF file.
-
-        Args:
-            file: A file object representing the PDF file.
-
-        Returns:
-            A string containing the extracted text.
-        """
-        pdf_document = fitz.open(stream=file.read(), filetype="pdf")
-        pdf_text = ""
-        for page in pdf_document:
-            pdf_text += page.get_text()
-            page_text_unicode = pdf_text.encode(self.encoding_source).decode(
-                self.encoding_target
+        if self.formats.index(self.input_type) == InputFormat.FILE.value:
+            self.input_file = st.file_uploader(
+                "PDF Datei",
+                type=FILE_FORMAT_OPTIONS,
+                help="Lade die Datei hoch, deren Text du extrahieren möchtest.",
             )
-            if self.remove_crlf:
-                page_text_unicode = page_text_unicode.replace("\n", " ")
-            if self.remove_sep:
-                page_text_unicode = page_text_unicode.replace(";", "")
-            pdf_text += page_text_unicode
-        return pdf_text
+            if self.input_file:
+                self.text = extract_text_from_uploaded_file(self.input_file)
+                self.text = self.clean_text(self.text)
+        elif self.formats.index(self.input_type) == InputFormat.URL.value:
+            self.input_file = st.text_input(
+                "URL",
+                help="Bitte gib den Link zur Datei ein, aus der du den Text extrahieren möchtest.",
+            )
+            if self.input_file:
+                self.text = extract_text_from_url(self.input_file)
+                self.text = self.clean_text(self.text)
+        elif self.formats.index(self.input_type) == InputFormat.ZIPPED_FILE.value:
+            ...
 
-    def read_pdf_from_url(url: str):
-        """
-        Downloads a PDF from a given URL and returns its text content.
-
-        Args:
-            url (str): The URL of the PDF to download.
-
-        Returns:
-            str: The text content of the downloaded PDF.
-
-        Raises:
-            Exception: If the PDF fails to download.
-        """
-        response = requests.get(url)
-        pdf_text = ""
-        if response.status_code == 200:
-            # with open("temp.pdf", "wb") as f:
-            pdf = fitz.open("temp.pdf")
-            for page_num in range(len(pdf)):
-                page = pdf.load_page(page_num)
-                pdf_text += page.get_text()
-            return pdf_text
-        else:
-            st.error(f"Failed to download PDF. Status code: {response.status_code}")
-            raise Exception("Failed to download PDF.")
+    def clean_text(self, text):
+        text = text.replace("-\n", "")
+        if self.remove_crlf:
+            text = text.replace("\n", " ")
+        if self.remove_sep:
+            text = text.replace(";", "")
+        # pattern = r'(?<!\.\s)(?<!\!\s)(?<!\?\s)\n'
+        # text = re.sub(pattern, ' ', text)
+        return text
 
     def run(self):
         """
@@ -100,12 +89,15 @@ class Pdf2Text(ToolBase):
         the extracted text as a txt file.
         """
         if st.button("Starten"):
-            if self.formats.index(self.input_type) == 0:
-                if self.file:
-                    self.text = self.extract_text_from_pdf(self.file)
-                    st.text_area("Text", value=self.text, height=400)
+            if self.formats.index(self.input_type) in (
+                InputFormat.FILE.value,
+                InputFormat.URL.value,
+            ):
+                if self.text:
+                    st.markdown("## Extrahierter Text")
+                    st.markdown(self.text)
 
-        if self.formats.index(self.input_type) == 0 and self.text != "":
+        if self.formats.index(self.input_type) == 0 and self.text != None:
             cols = st.columns(2, gap="small")
             with cols[0]:
                 if st.button("Text in Zwischenablage kopieren"):

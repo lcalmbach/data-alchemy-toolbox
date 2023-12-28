@@ -11,6 +11,8 @@ LLM_RETRIES = 3
 TEMP_PATH = "./data/temp/"
 OUTPUT_PATH = "./data/output/"
 DEMO_PATH = "./data/demo/"
+ENCODING_OPTIONS = ["utf-8", "latin1", "cp1252"]
+LOGFILE = "./data-alchemy-toolbox.log"
 SLEEP_TIME_AFTER_ERROR = 30
 DEFAULT_TEMPERATURE = 0.3
 DEFAULT_MAX_TOKENS = 500
@@ -20,6 +22,7 @@ MODEL_TOKEN_PRICING = {
     MODEL_OPTIONS[1]: {"in": 0.0030, "out": 0.004},
 }
 MODEL_MAX_TOKENS = {MODEL_OPTIONS[0]: 4096, MODEL_OPTIONS[1]: 16385}
+DEV_WORKSTATIONS = ["Liestal"]
 
 
 class ToolBase:

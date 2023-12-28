@@ -16,8 +16,7 @@ from helper import (
     get_var,
     get_token_size,
 )
-from const import LOGFILE, OUTPUT_PATH
-from tools.tool_base import ToolBase, MODEL_OPTIONS
+from tools.tool_base import ToolBase, MODEL_OPTIONS, LOGFILE, OUTPUT_PATH
 
 logger = init_logging(__name__, LOGFILE)
 
@@ -104,10 +103,9 @@ class Summary(ToolBase):
                 help="Geben Sie den Text ein, den Sie zusammenfassen möchten.",
             )
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.FILE.value:
-            formats = ",".join(FILE_FORMAT_OPTIONS)
             self.input_file = st.file_uploader(
                 "PDF oder Text Datei",
-                type=formats,
+                type=FILE_FORMAT_OPTIONS,
                 help="Laden Sie die Datei hoch, die Sie zusammenfassen möchten.",
             )
         elif (

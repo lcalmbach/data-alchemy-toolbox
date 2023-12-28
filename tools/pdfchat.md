@@ -1,4 +1,4 @@
-**PDF-Chat**: Interaktive Anfragen an PDF-Dokumentensammlungen
+**PDF-Chat**: Interaktive Fragen an PDF-Dokumente
 
 Mit **PDF-Chat** kannst du spezifische Anfragen über den Inhalt einer Sammlung von PDF-Dokumenten stellen. Hierzu werden die Dokumente zunächst in sogenannte "Embeddings" umgewandelt. Diese Embeddings sind spezielle Vektor-Darstellungen des Textes, die in einer auf die Speicherung von Text als Vektoren spezialisierten Datenbank abgelegt werden. 
 

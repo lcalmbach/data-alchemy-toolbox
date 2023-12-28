@@ -1,27 +1,30 @@
 import streamlit as st
-import numpy as np
 import json
 from datetime import datetime
-from tools.tool_base import (
-    ToolBase,
-    MODEL_OPTIONS,
-    MAX_ERRORS,
-)
 import os
 import pandas as pd
 import altair as alt
 from enum import Enum
-from helper import create_file, append_row, zip_files
+
+from helper import create_file, append_row, zip_files, init_logging
+from tools.tool_base import (
+    ToolBase,
+    MODEL_OPTIONS,
+    MAX_ERRORS,
+    LOGFILE,
+    DEMO_PATH,
+    OUTPUT_PATH,
+)
 
 
-OUTPUT_LONG = "./data/output/output_{}.csv"
-OUTPUT_SHORT = "./data/output/output_short_{}.csv"
-OUTPUT_STAT = "./data/output/output_stat_{}.csv"
-OUTPUT_ZIP = "./data/output/output_{}.zip"
-OUTPUT_ERROR = "./data/output/output_error_{}.txt"
+OUTPUT_LONG = OUTPUT_PATH + "output_{}.csv"
+OUTPUT_SHORT = OUTPUT_PATH + "output_short_{}.csv"
+OUTPUT_STAT = OUTPUT_PATH + "output_stat_{}.csv"
+OUTPUT_ZIP = OUTPUT_PATH + "output_{}.zip"
+OUTPUT_ERROR = OUTPUT_PATH + "output_error_{}.txt"
 DEFAULT_MODEL = "gpt-3.5-turbo"
-DEMO_TEXTS_FILE = "./data/demo/demo_texts.xlsx"
-DEMO_CATEORIES_FILE = "./data/demo/demo_categories.xlsx"
+DEMO_TEXTS_FILE = DEMO_PATH + "demo_texts.xlsx"
+DEMO_CATEORIES_FILE = DEMO_PATH + "demo_categories.xlsx"
 
 
 class InputFormat(Enum):
@@ -40,6 +43,7 @@ categories: [1: Bildung, 2: Bevölkerung, 3: Arbeit und Erwerb, 4: Energie]\n
 text: "Wie spät ist es?"\n
 output: [{2}]
 """
+logger = init_logging(__name__, LOGFILE)
 
 
 class Classifier(ToolBase):
@@ -132,7 +136,15 @@ class Classifier(ToolBase):
 
     def preview_data(self):
         """
-        Display a preview of the texts dataframe and categories dictionary using Streamlit expanders and tables.
+        Displays a preview of the data in the classifier.
+
+        This method uses Streamlit to display the data in three expandable sections:
+        - Demo-Texte: Displays the texts dataframe.
+        - Kategorien: Displays the categories dictionary.
+        - System Prompt: Displays the system prompt.
+
+        Returns:
+            None
         """
         with st.expander("Demo-Texte", expanded=False):
             st.dataframe(self.texts_df)
@@ -142,6 +154,12 @@ class Classifier(ToolBase):
             st.markdown(self.system_prompt)
 
     def get_nomatch_code(self):
+        """
+        Returns the code to be returned when no match is found.
+
+        Returns:
+            str: The code for no match.
+        """
         self.no_match_code = st.selectbox(
             "Code für keine Übereinstimmung",
             options=self.categories_dic.keys(),

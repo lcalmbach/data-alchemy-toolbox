@@ -3,18 +3,24 @@ import os
 import pandas as pd
 import tiktoken
 import nltk
-from io import BytesIO
 import zipfile
 from nltk.tokenize import word_tokenize, sent_tokenize
 from helper import init_logging, extract_text_from_uploaded_file, get_text_from_binary
 from enum import Enum
-from const import LOGFILE, OUTPUT_PATH
-from tools.tool_base import ToolBase, MODEL_OPTIONS, MODEL_TOKEN_PRICING
+
+from tools.tool_base import (
+    ToolBase,
+    MODEL_OPTIONS,
+    MODEL_TOKEN_PRICING,
+    DEMO_PATH,
+    LOGFILE,
+)
 
 nltk.download("punkt")
 logger = init_logging(__name__, LOGFILE)
 
-DEMO_FILE = "./data/demo/demo_summary.txt"
+
+DEMO_FILE = DEMO_PATH + "demo_summary.txt"
 FILE_FORMAT_OPTIONS = ["pdf", "txt"]
 INPUT_FORMAT_OPTIONS = [
     "Demo",
@@ -153,7 +159,9 @@ class Tokenizer(ToolBase):
             elif (
                 INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.FILE.value
             ):
-                self.text = extract_text_from_uploaded_file(self.input_file, placeholder)
+                self.text = extract_text_from_uploaded_file(
+                    self.input_file, placeholder
+                )
                 self.analyse_text()
             elif (
                 INPUT_FORMAT_OPTIONS.index(self.input_format)
@@ -165,7 +173,9 @@ class Tokenizer(ToolBase):
                         st.markdown(file.filename)
                         if file.filename.endswith(".pdf"):
                             with zip_ref.open(file) as pdf_file:
-                                self.text = extract_text_from_uploaded_file(pdf_file, placeholder)
+                                self.text = extract_text_from_uploaded_file(
+                                    pdf_file, placeholder
+                                )
                         elif file.filename.endswith(".txt"):
                             with zip_ref.open(file) as text_file:
                                 binary_content = text_file.read()

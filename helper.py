@@ -322,7 +322,7 @@ def check_file_type(uploaded_file):
 
 def extract_text_from_url(url: str):
     """
-    Extracts text from a PDF file given its URL. The file must have a PDF or text 
+    Extracts text from a PDF file given its URL. The file must have a PDF or text
     content type.
 
     Args:
@@ -330,18 +330,18 @@ def extract_text_from_url(url: str):
 
     Returns:
         str: The extracted text from the PDF file.
-            If the file type is unsupported or not a PDF, returns "Unsupported file 
+            If the file type is unsupported or not a PDF, returns "Unsupported file
             type or not a PDF".
     """
     response = requests.get(url)
     response.raise_for_status()  # Ensure the request was successful
 
-    content_type = response.headers['Content-Type']
-    if 'text/plain' in content_type:
+    content_type = response.headers["Content-Type"]
+    if "text/plain" in content_type:
         return response.text
-    elif 'application/pdf' in content_type:
+    elif "application/pdf" in content_type:
         with fitz.open("pdf", response.content) as doc:
-            text = ''
+            text = ""
             for page in doc:
                 text += page.get_text()
             return text
@@ -365,15 +365,15 @@ def extract_text_from_file(file_path: str) -> str:
     """
     _, file_extension = os.path.splitext(file_path)
 
-    if file_extension.lower() == '.pdf':
+    if file_extension.lower() == ".pdf":
         # Process PDF file
         with fitz.open(file_path) as doc:
-            text = ''
+            text = ""
             for page in doc:
                 text += page.get_text()
             return text
-    elif file_extension.lower() in ['.txt', '.text']:
-        with open(file_path, 'r', encoding='utf-8') as file:
+    elif file_extension.lower() in [".txt", ".text"]:
+        with open(file_path, "r", encoding="utf-8") as file:
             return file.read()
     else:
         raise ValueError("Unsupported file type")
@@ -384,7 +384,7 @@ def extract_text_from_uploaded_file(uploaded_file: io.BytesIO) -> str:
     if uploaded_file.type == "application/pdf":
         # Process PDF file
         with fitz.open(stream=uploaded_file.read(), filetype="pdf") as doc:
-            text = ''
+            text = ""
             for page in doc:
                 text += page.get_text()
             return text

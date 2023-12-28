@@ -12,8 +12,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain.llms import OpenAI
 
-from tools.tool_base import ToolBase
-from const import DEMO_PATH, ENCODING_OPTIONS
+from tools.tool_base import ToolBase, DEMO_PATH, ENCODING_OPTIONS
 
 
 class PdfChat(ToolBase):

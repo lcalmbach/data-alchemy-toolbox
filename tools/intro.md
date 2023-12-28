@@ -6,14 +6,15 @@ Bitte beachten Sie, dass diese Applikation darauf abzielt, die Möglichkeiten ve
 
 | Funktionen | Verfügbarkeit |
 |------------|---------------|
-| Anonymisierung von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien | 🚧✅ |
-| Klassifizierung von Texten nach vorgegebenen Kategorien | 🚧✅ |
-| Umwandlung von Audio-Dateien in Text | 🚧✅ |
-| Übersetzung von Texten | 🚧✅ |
-| Zusammenfassung von Texten aus Text- oder PDF-Dateien | 🚧✅ |
-| Umwandlung von PDF-Dateien in Text | 🚧✅ |
-| Der PDF Chatbot, der Fragen zu einem geladenen Dokument beantwortet | 🚧✅ |
-| Tokenizer | 💡 |
+| Anonymisierung von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien | ✅ |
+| Klassifizierung von Texten nach vorgegebenen Kategorien | ✅ |
+| Umwandlung von Audio-Dateien in Text | ✅ |
+| Bild zu Text | ✅ |
+| Zusammenfassung von Texten aus Text- oder PDF-Dateien | ✅ |
+| Übersetzung von Texten | ✅ |
+| Umwandlung von PDF-Dateien in Text | ✅ |
+| PDF Chatbot, beantwortet Fragen zu einem geladenen Dokument | ✅ |
+| Tokenizer gibt die Anzahl Tokens in Texten und Dokumenten an | ✅ |
 </br>
 
 | **Legende zur Verfügbarkeit:** | |

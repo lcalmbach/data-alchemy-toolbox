@@ -5,13 +5,13 @@ Eingabeformate
 - **Eine Date**i: Du hast die Möglichkeit, eine Text- oder PDF-Datei hochzuladen, die übersetzt werden soll. Die Datei sollte im Text- oder PDF-Format vorliegen.
 - **Eine URL**: Es ist möglich, eine URL anzugeben, deren Inhalt übersetzt werden soll. Auch hier muss die Datei im Text- oder PDF-Format vorliegen.
 - **Schlüssel-Wert-Paare**: Du kannst eine Liste von Schlüssel-Wert-Paaren hochladen, die übersetzt werden sollen. Diese Art der Übersetzung eignet sich besonders für Codelisten oder Webseitentexte. Die Datei sollte im CSV-Format vorliegen und folgende Struktur aufweisen:
-```vbnet
-Copy code
-key; value
-welcome; Willkommen
-tab; Tabelle
-```	
-Dabei ist `key` der im Programmcode verwendete Schlüssel, welcher eindeutig sein muss. `value` ist der zu übersetzende Text. Die App fügt eine Spalte "translation" hinzu, in der die Übersetzung eingetragen wird. Der Schlüssel wird für die Übersetzung von Weboberflächen verwendet, beispielsweise wird statt `print("Willkommen")` dann `print(translate("welcome"))` genutzt. Soll lediglich eine Codeliste übersetzt werden, ist der Schlüssel nicht erforderlich; dennoch muss die Spalte in der Eingabedatei vorhanden sein. In diesem Fall kann eine fortlaufende Nummerierung (1, 2, 3, 4) verwendet werden, wobei auf Eindeutigkeit zu achten ist.
+    ```vbnet
+    Copy code
+    key; value
+    welcome; Willkommen
+    tab; Tabelle
+    ```	
+    Dabei ist `key` der im Programmcode verwendete Schlüssel, welcher eindeutig sein muss. `value` ist der zu übersetzende Text. Die App fügt eine Spalte "translation" hinzu, in der die Übersetzung eingetragen wird. Der Schlüssel wird für die Übersetzung von Weboberflächen verwendet, beispielsweise wird statt `print("Willkommen")` dann `print(translate("welcome"))` genutzt. Soll lediglich eine Codeliste übersetzt werden, ist der Schlüssel nicht erforderlich; dennoch muss die Spalte in der Eingabedatei vorhanden sein. In diesem Fall kann eine fortlaufende Nummerierung (1, 2, 3, 4) verwendet werden, wobei auf Eindeutigkeit zu achten ist.
 - **Multilang JSON-Format**: Viele Internationalisierungs-Bibliotheken nutzen das JSON-Format zur Datenspeicherung. Dieses Format bietet den Vorteil, dass die übersetzten Texte sehr einfach in Programmcode-Wörterbücher integriert werden können.
 
 Anwendungsmöglichkeiten

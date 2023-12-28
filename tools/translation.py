@@ -4,7 +4,11 @@ import iso639
 import os
 from enum import Enum
 
-from helper import extract_text_from_url, extract_text_from_file, extract_text_from_uploaded_file
+from helper import (
+    extract_text_from_url,
+    extract_text_from_file,
+    extract_text_from_uploaded_file,
+)
 from tools.tool_base import ToolBase, DEMO_PATH, OUTPUT_PATH
 
 SYSTEM_PROMPT_TEMPLATE = "You are a professional translator translating from {} to {}"
@@ -49,6 +53,7 @@ class Translation(ToolBase):
         )
 
     def show_settings(self):
+        self.input_type = st.radio("Input Format", options=self.formats)
         index_source = list(self.language_dict.keys()).index(self.lang_source)
         index_target = list(self.language_dict.keys()).index(self.lang_target)
         self.lang_source = st.selectbox(
@@ -62,9 +67,6 @@ class Translation(ToolBase):
             options=self.language_dict.keys(),
             format_func=lambda x: self.language_dict[x],
             index=index_target,
-        )
-        self.input_type = st.radio(
-            "Input Format", options=self.formats
         )
         if self.formats.index(self.input_type) == InputFormat.DEMO.value:
             text = extract_text_from_file(DEMO_FILE)
@@ -97,7 +99,7 @@ class Translation(ToolBase):
             )
             self.input_file = st.file_uploader(
                 self.input_type,
-                type=['csv'],
+                type=["csv"],
                 help="Lade die Datei hoch, die du übersetzen möchtest.",
             )
             if self.input_file is not None:
@@ -136,7 +138,9 @@ class Translation(ToolBase):
             self.output, tokens = self.get_completion(text=prompt, index=index)
             self.data.loc[index, "translation"] = self.output
             i += 1
-        filename = OUTPUT_PATH + self.input_file.name.replace(".csv", "_translation.csv")
+        filename = OUTPUT_PATH + self.input_file.name.replace(
+            ".csv", "_translation.csv"
+        )
         self.data.to_csv(filename, sep=self.separator, index=False)
         with st.expander("Übersetzung"):
             st.dataframe(self.data)
@@ -150,11 +154,19 @@ class Translation(ToolBase):
         if st.button("Übersetzung"):
             with st.spinner("Übersetzung läuft..."):
                 placeholder = st.empty()
-                if self.formats.index(self.input_type) in [InputFormat.DEMO.value, InputFormat.FILE.value, InputFormat.URL.value]:
+                if self.formats.index(self.input_type) in [
+                    InputFormat.DEMO.value,
+                    InputFormat.FILE.value,
+                    InputFormat.URL.value,
+                ]:
                     prompt = USER_PROMPT.format(self.text)
                     self.output, tokens = self.get_completion(text=prompt, index=0)
-                    st.markdown(self.token_use_expression(tokens))
-                elif self.formats.index(self.input_type) == InputFormat.KEY_VALUE_PAIRS.value:
+                    self.tokens_in, self.tokens_out = tokens[0], tokens[1]
+                    st.markdown(self.token_use_expression())
+                elif (
+                    self.formats.index(self.input_type)
+                    == InputFormat.KEY_VALUE_PAIRS.value
+                ):
                     self.run_csv_translation(placeholder)
                 else:
                     st.warning("Diese Option wird noch nicht unterstützt.")

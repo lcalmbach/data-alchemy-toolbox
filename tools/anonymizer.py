@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import os
-from tools.tool_base import ToolBase
 from typing import Optional, List, Tuple, Set
 from presidio_analyzer import (
     RecognizerResult,
@@ -25,8 +24,8 @@ try:
 except ImportError:
     print("Flair is not installed")
 
-from helper import zip_files, get_hostname
-from const import DEV_WORKSTATIONS
+from helper import get_hostname
+from tools.tool_base import ToolBase, DEV_WORKSTATIONS
 
 DEMO_FILENAME = "./data/demo/rapport_4721-b.txt"
 
