@@ -3,6 +3,7 @@ from streamlit_option_menu import option_menu
 import logging
 from tools import (
     classifier,
+    tokenizer,
     speech2text,
     summarizer,
     translation,
@@ -11,7 +12,7 @@ from tools import (
     pdf2text,
     pdfchat,
     image2text,
-    tokenizer,
+    finder,
 )
 
 __version__ = "0.1.0'"
@@ -34,6 +35,7 @@ menu_dic = {
     "PDF2TXT": pdf2text.Pdf2Text,
     "PDF-Chatbot": pdfchat.PdfChat,
     "Tokenizer": tokenizer.Tokenizer,
+    "Finder": finder.Finder,
 }
 
 menu_icons = [
@@ -47,6 +49,7 @@ menu_icons = [
     "file-earmark-pdf",
     "chat",
     "body-text",
+    "search",
 ]
 
 

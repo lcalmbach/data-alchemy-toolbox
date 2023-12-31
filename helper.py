@@ -494,4 +494,32 @@ def convert_df_to_csv(df):
     return output.getvalue()
 
 
+def empty_folder(folder_path: str, target_extension: str = "*"):
+    """
+    Remove all files with the specified target extension from the given folder.
+
+    Args:
+        folder_path (str): The path to the folder.
+        target_extension (str): The target file extension to remove. Use "*" to remove all files. default = "*"
+
+    Returns:
+        tuple: A tuple containing a boolean indicating the success of the operation and the number of files removed.
+    """
+    ok, cnt = True, 0
+    if os.path.exists(folder_path):
+        for file_name in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, file_name)
+            try:
+                if os.path.isfile(file_path) and (
+                    file_name.endswith(target_extension) or target_extension == "*"
+                ):
+                    os.remove(file_path)
+                    cnt += 1
+            except Exception as e:
+                ok = False
+    else:
+        ok = False
+    return ok, cnt
+
+
 logger = init_logging(__name__, LOGFILE)
