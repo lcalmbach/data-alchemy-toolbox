@@ -2,20 +2,33 @@ import streamlit as st
 import os
 import pandas as pd
 import zipfile
-from helper import init_logging, extract_text_from_uploaded_file, empty_folder
-from enum import Enum
+import shutil
+from helper import (
+    init_logging,
+    extract_text_from_uploaded_file,
+    extract_text_from_url,
+    empty_folder,
+    url_exists,
+    get_original_url
+)
 from whoosh.index import create_in
 from whoosh import index
-from whoosh.fields import Schema, TEXT, KEYWORD, ID, STORED
+from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser
 from whoosh.query import Every, Term
 from pathlib import Path
+import time
 
 from tools.tool_base import (
     ToolBase,
     INDEX_PATH,
     DOCS_PATH,
     LOGFILE,
+)
+
+MAX_DOCS = 1000  # max number of docs to index
+MAX_WAIT_SECS = (
+    100  # max number of seconds to wait between requests to avoid server overload
 )
 
 logger = init_logging(__name__, LOGFILE)
@@ -83,30 +96,39 @@ class Finder(ToolBase):
             schema = Schema(
                 title=TEXT(stored=True), path=ID(stored=True), content=TEXT(stored=True)
             )
-            return create_in(INDEX_PATH, schema)
+            return create_in(source["indexdir"], schema)
         else:
-            return index.open_dir(INDEX_PATH)
+            return index.open_dir(source["indexdir"])
 
     def add_document(self, doc: Document):
-        writer = self.ix.writer()
-        writer.add_document(title=doc.title, path=doc.path, content=doc.content)
-        writer.commit()
+            """
+            Adds a document to the index.
 
-    def document_exists_in_index(self, filename):
+            Args:
+                doc (Document): The document to be added.
+
+            Returns:
+                None
+            """
+            writer = self.ix.writer()
+            writer.add_document(title=doc.title, path=doc.path, content=doc.content)
+            writer.commit()
+
+    def document_exists_in_index(self, field: str, value: str):
         """
-        Check if a document with the given filename exists in the Whoosh index.
+        Check if a document exists in the index based on the given field and value.
 
         Args:
-            filename (str): The filename or unique identifier of the document to check.
-            index_directory (str): The path to the directory containing the Whoosh index.
+            field (str): The field to search in.
+            value (str): The value to search for.
 
         Returns:
-            bool: True if the document exists in the index, False otherwise.
+            bool: True if a matching document is found, False otherwise.
         """
 
         # Create a searcher
         with self.ix.searcher() as searcher:
-            query = Term("title", filename)
+            query = Term(field,  value)
             results = searcher.search(query)
             return not results.is_empty()
 
@@ -119,17 +141,57 @@ class Finder(ToolBase):
             bool: True if the index was successfully purged, False otherwise.
         """
         try:
-            writer = self.ix.writer()
-            writer.delete_by_query(Every())
-            writer.commit()
-            ok, files_removed = empty_folder()
-            if ok:
-                logger.info(f"Removed {files_removed} files from {self.docs_path}")
-            else:
-                logger.warning(f"Could not remove files from {self.docs_path}")
-            return True
+            source = INDEX_SOURCES[self.index_source]
+            shutil.rmtree(source["indexdir"])
+            # trigger regeneration of empty index
+            self.index_source = self._index_source
         except Exception as e:
-            return False
+            logger.warning(f"Error while purging index: {e}")
+
+    def index_documents(self, df, placeholder, max_docs, sleep_time):
+        df.columns = ["title", "url"]
+        cnt = 1
+        for _, row in df.iterrows():
+            if " " in row["url"]:
+                logger.warning(f"Removed space from URL: {row['url']}")
+                row["url"] = row["url"].split(" ")[0]
+            # find original url if url is a redirect
+            url = get_original_url(row["url"])
+            exists, status_code = url_exists(url)
+            if exists and not self.document_exists_in_index("path", url):
+                text = extract_text_from_url(url)
+                doc = Document(row["title"], url, text)
+                self.add_document(doc)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                placeholder.markdown(f"Indexiere ({cnt}/{len(df)}) {row['title']}")
+            elif not exists:
+                st.warning(f"({cnt}/{len(df)}) Status {status_code} für Dokument {row['title']} existiert nicht ({row['url']})")
+            else:
+                placeholder.markdown(f"({cnt}/{len(df)}) {row['title']} existiert bereits in index")
+            cnt += 1
+            if cnt > max_docs:
+                placeholder.warning(f"Maximale Anzahl Dokumente erreicht ({max_docs})")
+                break
+
+    def show_index_content(self):
+        if self.ix.doc_count() > 0:
+            with st.expander(f"{self.ix.doc_count()} Dokumente im Index"):
+                with self.ix.searcher() as searcher:
+                    docnums = searcher.reader().all_doc_ids()
+                    cnt = 0
+                    if self.ix.doc_count() > 100:
+                        st.markdown("Es werden nur die ersten 100 Dokumente angezeigt.")
+                    for docnum in docnums:
+                        document = searcher.reader().stored_fields(docnum)
+                        st.markdown(document["path"])
+                        cnt += 1
+                        if cnt > 100:
+                            break
+            if st.button("Index initialisieren"):
+                self.purge_index()
+        else:
+            st.markdown("Der Index ist leer.")
 
     def show_settings(self):
         """
@@ -156,27 +218,58 @@ class Finder(ToolBase):
             )
             if uploaded_files:
                 for file in uploaded_files:
-                    if not self.document_exists_in_index(file.name):
+                    if not self.document_exists_in_index("title", file.name):
                         text = extract_text_from_uploaded_file(file)
                         doc = Document(file.name, file.name, text)
                         self.add_document(doc)
                         save_path = os.path.join(
                             INDEX_SOURCES[self.index_source]["docs_path"], file.name
                         )
-                        with open(save_path, "wb") as f:
-                            f.write(file.getbuffer())
-            with st.expander(f"{self.ix.doc_count()} Dokumente im Index"):
-                with self.ix.searcher() as searcher:
-                    docnums = searcher.reader().all_doc_ids()
-                    for docnum in docnums:
-                        document = searcher.reader().stored_fields(docnum)
-                        st.write(document["path"])
-            if st.button("Index löschen"):
-                self.purge_index()
+                        try:
+                            with open(save_path, "wb") as f:
+                                f.write(file.getbuffer())
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+            self.show_index_content()
+
         elif self.index_source == "remote":
-            ...
+            self.show_index_content()
+            uploaded_file = st.file_uploader(
+                "CSV Datei mit Links",
+                type=["csv"],
+                help="Lade eine Datei hoch, welche die Felder: [title, url] enthält",
+                accept_multiple_files=False,
+            )
+            if uploaded_file:
+                df = pd.DataFrame()
+                df = df.iloc[324:]
+                try:
+                    df = pd.read_csv(uploaded_file, sep=";")
+                    st.markdown(f"{len(df)} Dokumente in der Datei gefunden")
+                    # todo validate content of file
+                    # ok = (len(df.columns) = 2)
+                    max_docs = st.number_input(
+                        "Maximale Anzahl Dokumente",
+                        min_value=1,
+                        max_value=MAX_DOCS,
+                        value=MAX_DOCS,
+                        help="Die Anzahl der indexierbaren Dokumente ist in dieser App begrenzt, um den Server nicht zu überlasten."
+                    )
+                    sleep_time = st.number_input(
+                        "Wartezeit zwischen den Anfragen (in Sekunden)",
+                        min_value=0,
+                        max_value=MAX_WAIT_SECS,
+                        value=0,
+                        help="Manche Server blockieren Anfragen, wenn zu viele Anfragen in zu kurzer Zeit gestellt werden."
+                    )
+                    st.markdown("Damit der Inhalt dieser Dokumente für eine Suche bereitsteht, müssen sie zuerst indexiert werden. Klicke auf die Schaltfläche unten um den Prozess zu starten.")
+                    if st.button("Dokumente indexierenmm"):
+                        placeholder = st.empty()
+                        self.index_documents(df, placeholder, max_docs, sleep_time)
+                except Exception as e:
+                    st.error(f"Error: {e}")
         elif self.index_source == "s3":
-            ...
+            st.info("Diese Option steht noch nicht zur Verfügung, stay tuned!")
 
     def run(self):
         """
@@ -186,7 +279,7 @@ class Finder(ToolBase):
             None
         """
 
-        st.write(f"{self.ix.doc_count()} Dokumente im Index")
+        st.markdown(f"{self.ix.doc_count()} Dokumente im Index")
         text = st.text_input("🔎Suchen", help="Gib einen Suchbegriff ein")
 
         if st.button("Suche starten"):
@@ -195,15 +288,8 @@ class Finder(ToolBase):
 
             with self.ix.searcher() as s:
                 results = s.search(q, limit=None)
+                results.fragmenter.surround = 50
                 for hit in results:
-                    cols = st.columns(2)
-                    with cols[0]:
-                        st.write(hit["title"])
-                    with cols[1]:
-                        st.download_button(
-                            "Laden",
-                            Path(self.docs_path + hit["path"]).read_bytes(),
-                            hit["title"],
-                        )
                     st.markdown(hit.highlights("content"), unsafe_allow_html=True)
+                    st.markdown(hit["path"])
                     st.markdown("----")

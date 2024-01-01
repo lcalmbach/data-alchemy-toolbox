@@ -2,6 +2,6 @@ env
 work
 __pychache__
 test*.*
-./output/*.csv
-./output/*.csv
+./data/output/*.csv
+./data/output/*.csv
 

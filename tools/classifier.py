@@ -49,7 +49,7 @@ logger = init_logging(__name__, LOGFILE)
 class Classifier(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
-        self.title = "Klassifizerung"
+        self.title = "Klassifizierung"
         self._texts_df = pd.DataFrame()
         self._categories_dic = {}
         self._settings = {}

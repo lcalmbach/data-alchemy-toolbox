@@ -15,10 +15,10 @@ from tools import (
     finder,
 )
 
-__version__ = "0.1.1'"
+__version__ = "0.1.2'"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2023-12-31"
+VERSION_DATE = "2024-01-01"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"

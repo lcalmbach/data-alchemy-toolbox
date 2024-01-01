@@ -522,4 +522,40 @@ def empty_folder(folder_path: str, target_extension: str = "*"):
     return ok, cnt
 
 
+def url_exists(url: str) -> bool:
+    """
+    Checks if a PDF file exists at the given URL.
+
+    Args:
+        url (str): The URL to check.
+
+    Returns:
+        bool: True if the PDF file exists, False otherwise.
+    """
+    response = requests.head(url)
+    return (response.status_code < 400), response.status_code
+
+
+def get_original_url(url: str) -> str:
+    """
+    Retrieves the original URL of a shortened URL.
+
+    Args:
+        url (str): The shortened URL.
+
+    Returns:
+        str: The original URL.
+    """
+    try:
+        response = requests.head(url, allow_redirects=True)
+        if response.url != url:
+            original_url = response.url
+            return original_url
+        else:
+            return url  # No redirection occurred, URL is the same
+    except requests.exceptions.RequestException as e:
+        logger.error(str(e))
+        return None
+
+
 logger = init_logging(__name__, LOGFILE)
