@@ -13,6 +13,7 @@ from tools import (
     pdfchat,
     image2text,
     finder,
+    moderator
 )
 
 __version__ = "0.1.2'"
@@ -36,6 +37,7 @@ menu_dic = {
     "PDF-Chatbot": pdfchat.PdfChat,
     "Tokenizer": tokenizer.Tokenizer,
     "Finder": finder.Finder,
+    "Moderator*in": moderator.Moderator,
 }
 
 menu_icons = [
@@ -50,6 +52,7 @@ menu_icons = [
     "chat",
     "body-text",
     "search",
+    "sign-stop"
 ]
 
 
