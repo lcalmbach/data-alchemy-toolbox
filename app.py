@@ -16,7 +16,7 @@ from tools import (
     moderator
 )
 
-__version__ = "0.1.3'"
+__version__ = "0.1.3"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
 VERSION_DATE = "2024-03-01"
