@@ -1,27 +1,13 @@
-Dieses Tool ermöglicht es, eine Liste von Texten bestimmten, vordefinierten Kategorien zuzuordnen. Jeder Text kann dabei mehreren Kategorien zugeordnet werden. Folgende Inputformate werden unterstützt:
+Die Moderation von unangemessenen Inhalten spielt eine entscheidende Rolle bei der Nutzung von Language Models (LLMs). Sie bezieht sich auf den Prozess der Identifizierung und Filterung von Inhalten, die gegen bestimmte Richtlinien, Ethik oder gesetzliche Bestimmungen verstossen. Dies ist von entscheidender Bedeutung, um sicherzustellen, dass LLMs in verschiedenen Anwendungen, darunter soziale Medien, Chatbots, Foren und andere Plattformen, sicher und ethisch verwendet werden können. Unangemessene oder beleidigende Inhalte können negative Auswirkungen auf Benutzer haben und den Ruf einer Plattform gefährden.
 
-1. **Demo-Modus**: Hierbei ist kein weiterer Input erforderlich, da der Input vordefiniert ist. Der Demodatensatz umfasst 20 Antworten von Schülern auf die Frage: "Was gefällt dir besonders gut an Basel?"
+Moderation hilft dabei, die Qualität und Sicherheit der von LLMs generierten Inhalte sicherzustellen. Wenn unangemessene oder schädliche Informationen unkontrolliert verbreitet werden, kann dies schwerwiegende Konsequenzen haben. Dies betrifft nicht nur den Schutz von Benutzern vor beleidigenden Inhalten, sondern auch die Einhaltung von Gesetzen und Vorschriften, den Schutz der Marke und das Schaffen einer positiven Benutzererfahrung.
 
-2. **Text-Input-Datei**: Diese sollte im folgenden Format vorliegen:
-    ```
-    text_id; text
-    1; Mir gefällt das Münster und das Baden im Rhein.
-    2; Ich finde toll, dass man mit dem Tram überall hinkommt.
+Das OpenAI Moderation API ermöglicht Entwicklern, eine leistungsstarke Moderation in ihre Anwendungen zu integrieren. Mit diesem API können Texte auf unangemessene, diskriminierende oder problematische Inhalte hin überprüft werden. Es nutzt fortschrittliche Techniken des maschinellen Lernens, um solche Inhalte zu identifizieren und zu kennzeichnen. Das API kann an individuelle Anforderungen angepasst werden, um die Sensitivität der Moderation anzupassen.
 
-    Kategorien:
-    cat_id; Kategorie
-    1; Verkehr
-    2; Kultur, Fasnacht
-    3; Sport, FCB
-    4; Restaurants
-    ```
+**Die Verwendung in der "DataAlchemy Toolbox" App:**
 
-Überprüfen Sie zunächst die Einstellungen unter dem Menüpunkt **⚙️ Einstellungen**. Anschließend können Sie eine oder mehrere Dateien hochladen. Es ist auch möglich, mehrere Dateien in einem Zip-Archiv zu verpacken. Beachten Sie jedoch, dass das Archiv eine maximale Größe von 100 MB nicht überschreiten darf.
+- **Demo Modus**: In diesem Modus kannst du aus 2 Texten auswählen und diese auf unangemessene Inhalte überprüfen. Es handelt sich um einen politischen Vorstoss und einen Drohbrief. Beide Texte können interaktiv angepasst werden, um die Sensitivität der Analyse, z.B. auf bestimmte Ausdrücke, zu prüfen.
 
-Das Zip-Archiv kann über den Download-Button heruntergeladen werden. Die Ergebnisse der Klassifizierung werden in einem Zip-Archiv als eine oder mehrere Textdateien zurückgegeben. Diese Dateien tragen den gleichen Namen wie die ursprünglichen CSV- oder XLSX-Dateien.
-
-**Anwendungsmöglichkeiten**:
-
-- **Klassifizierung von Texten und Dokumenten**: Beliebige Texte und Dokumente können nach vorgegebenen Kategorien klassifiziert werden.
-
-- **Sentimentanalyse**: Texte oder Dokumentinhalte werden in die festen Kategorien positiv, negativ oder neutral eingeordnet. Dies könnte beispielsweise für die Analyse von Tweets mit dem Hashtag #Basel oder anderen umfangreichen Textsammlungen, wie Kundenfeedback, verwendet werden.
+**Anwendungsmöglichkeiten:**
+- **Screening von Texten in grossen Textsammlungen**: Grössere Textsammlungen können auf unangemessene Inhalte geprüft werden, z.B. Feedback von Webseiten, Kunden-E-Mails, Tweets usw.
+- **Integration in Chatbots**: Chatbots tendieren dazu, auf die Wünsche der Kunden einzugehen. Während dies in den meisten Fällen positiv ist, kann es auch zu unangemessenen Antworten führen. Sowohl die Anfragen der Kunden als auch die Antworten des Chatbots können automatisiert auf unangemessene Inhalte geprüft werden, um die Verbreitung von unangemessenen Inhalten zu verhindern.

@@ -16,6 +16,7 @@ Bitte beachten Sie, dass diese Applikation darauf abzielt, die Möglichkeiten ve
 | PDF Chatbot, beantwortet Fragen zu einem geladenen Dokument | ✅ |
 | Tokenizer gibt die Anzahl Tokens in Texten und Dokumenten an | ✅ |
 | Finder erlaubt es eine Sammlung von Dokumenten zu laden, oder per csv Datei zu refernezeieren und die Dokumente zu durchsuchen | ✅ |
+| Moderator überprüft Text auf unangemessene Inhalte | 🚧 | 
 </br>
 
 | **Legende zur Verfügbarkeit:** | |

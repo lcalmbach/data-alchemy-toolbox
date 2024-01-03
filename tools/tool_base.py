@@ -3,6 +3,7 @@ import time
 from helper import get_var
 from openai import OpenAI
 import tiktoken
+import json
 
 # import boto3
 
@@ -114,6 +115,11 @@ class ToolBase:
                 time.sleep(SLEEP_TIME_AFTER_ERROR)
         return "", 0
 
+    def usage_compliance_check(self, text: str):
+        client = OpenAI()
+        response = client.moderations.create(input=text)
+        return response.model_dump()
+    
     def show_settings(self):
         pass
 
