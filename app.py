@@ -37,7 +37,7 @@ menu_dic = {
     "PDF-Chatbot": pdfchat.PdfChat,
     "Tokenizer": tokenizer.Tokenizer,
     "Finder": finder.Finder,
-    "Moderator*in": moderator.Moderator,
+    "Unangemessene Inhalte": moderator.Moderator,
 }
 
 menu_icons = [

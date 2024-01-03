@@ -6,17 +6,17 @@ Bitte beachten Sie, dass diese Applikation darauf abzielt, die Möglichkeiten ve
 
 | Funktionen | Verfügbarkeit |
 |------------|---------------|
-| Anonymisierung von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien | ✅ |
-| Klassifizierung von Texten nach vorgegebenen Kategorien | ✅ |
-| Umwandlung von Audio-Dateien in Text | ✅ |
-| Bild zu Text | ✅ |
-| Zusammenfassung von Texten aus Text- oder PDF-Dateien | ✅ |
+| **Anonymisierung** von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien | ✅ |
+| **Klassifizierung** von Texten nach vorgegebenen Kategorien | ✅ |
+| **Speech2Text**: Umwandlung von Audio-Dateien in Text | ✅ |
+| **Bild zu Text** erstellt erklärende Texte zu Bildern | ✅ |
+| **Zusammenfassung** von Texten aus Text- oder PDF-Dateien | ✅ |
 | Übersetzung von Texten | ✅ |
-| Umwandlung von PDF-Dateien in Text | ✅ |
-| PDF Chatbot, beantwortet Fragen zu einem geladenen Dokument | ✅ |
-| Tokenizer gibt die Anzahl Tokens in Texten und Dokumenten an | ✅ |
-| Finder erlaubt es eine Sammlung von Dokumenten zu laden, oder per csv Datei zu refernezeieren und die Dokumente zu durchsuchen | ✅ |
-| Moderator überprüft Text auf unangemessene Inhalte | 🚧 | 
+| **PDF2TXT**: Umwandlung von PDF-Dateien in Text | ✅ |
+| **PDF Chatbot** beantwortet Fragen zu einem geladenen Dokument | ✅ |
+| **Tokenizer** gibt die Anzahl Tokens in Texten und Dokumenten an | ✅ |
+| **Finder** erlaubt es eine Sammlung von Dokumenten zu laden, oder per csv Datei zu referenzieren und die Dokumente zu durchsuchen | ✅ |
+| **Unangemessene Inhalte** verwendet das Moderation-API um Text auf problematische Inhalte zu untersuchen. | 🚧 | 
 </br>
 
 | **Legende zur Verfügbarkeit:** | |
