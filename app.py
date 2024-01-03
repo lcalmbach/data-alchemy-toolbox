@@ -16,10 +16,10 @@ from tools import (
     moderator
 )
 
-__version__ = "0.1.2'"
+__version__ = "0.1.3'"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2024-01-01"
+VERSION_DATE = "2024-03-01"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
