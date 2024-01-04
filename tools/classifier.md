@@ -16,7 +16,7 @@
     4; Restaurants
     ```
 
-Überprüfen Sie zunächst die Einstellungen unter dem Menüpunkt **⚙️ Einstellungen**. Anschließend können Sie eine oder mehrere Dateien hochladen. Es ist auch möglich, mehrere Dateien in einem Zip-Archiv zu verpacken. Beachten Sie jedoch, dass das Archiv eine maximale Größe von 100 MB nicht überschreiten darf.
+Überprüfe zunächst die Einstellungen unter dem Menüpunkt **⚙️ Einstellungen**. Anschliessend kannst eine oder mehrere Dateien hochladen. Es ist auch möglich, mehrere Dateien in einem Zip-Archiv zu verpacken. Beachten Sie jedoch, dass das Archiv eine maximale Größe von 100 MB nicht überschreiten darf.
 
 Das Zip-Archiv kann über den Download-Button heruntergeladen werden. Die Ergebnisse der Klassifizierung werden in einem Zip-Archiv als eine oder mehrere Textdateien zurückgegeben. Diese Dateien tragen den gleichen Namen wie die ursprünglichen CSV- oder XLSX-Dateien.
 

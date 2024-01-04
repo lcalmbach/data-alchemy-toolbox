@@ -10,7 +10,7 @@ from io import BytesIO
 import base64
 import zipfile
 
-from helper import init_logging, save_uploadedfile, encode_image, convert_df_to_csv
+from helper import init_logging, save_uploadedfile, encode_image, convert_df_to_csv, url_exists
 from tools.tool_base import ToolBase, TEMP_PATH, OUTPUT_PATH, DEMO_PATH
 
 
@@ -95,8 +95,8 @@ class Image2Text(ToolBase):
                 "Bild URL eingeben",
                 help="Gebe die URL ein für das Bild, das du beschreiben möchtest.",
             )
-
-            if bild is not None and bild != self.input_file:
+            ok, err_msg = url_exists(bild)
+            if ok and bild != self.input_file:
                 self.input_file = bild
                 self.text = None
                 try:
@@ -112,7 +112,9 @@ class Image2Text(ToolBase):
                     )
 
                 except Exception as e:
-                    st.error(f"Ein Fehler ist aufgetreten: {e}")
+                    # only report error if the user has entered a URL
+                    if self.input_file.startswith("http"):
+                        st.error(f"Ein Fehler ist aufgetreten: {e}")
         elif self.formats.index(self.input_type) == InputFormat.ZIPPED_FILE.value:
             self.input_file = st.file_uploader(
                 "ZIP Datei hochladen",
@@ -198,15 +200,17 @@ class Image2Text(ToolBase):
             st.text_area("Beschreibung des Bilds", self.text, height=500)
 
     def run_url(self):
-        if self.input_file is not None:
+        ok, err_msg = url_exists(self.input_file)
+        if ok:
             st.image(self.input_file)
             metadata = self.extract_metadata(self.input_file)
             with st.expander("EXIF Metadaten"):
                 st.write(metadata)
-        if st.button("Bild zu Text", disabled=self.input_file is None):
+        if st.button("Bild zu Text", disabled = not ok):
+            self.text = None
             with st.spinner("Bilderkennung läuft..."):
                 self.text = self.image2text(self.input_file)
-        if self.text:
+        if self.text is not None:
             st.text_area("Beschreibung des Bilds", self.text, height=500)
 
     def run_zipped_file(self):

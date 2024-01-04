@@ -1,8 +1,8 @@
 ## Willkommen in der DataAlchemy-Toolbox
 
-Die DataAlchemy Toolbox (DATx) ist eine umfassende Sammlung von Werkzeugen zur Verarbeitung unstrukturierter Daten. Sie umfasst Methoden, die für die Aufbereitung dieser Daten notwendig sind. Die Verfügbarkeit und die Eigenschaften der einzelnen Werkzeuge sind in der nachstehenden Tabelle dargestellt. Die Toolbox wird kontinuierlich erweitert und verbessert.
+Die DataAlchemy Toolbox (DATx) ist eine Sammlung von Werkzeugen zur Verarbeitung unstrukturierter Daten. Sie umfasst Methoden, die für die Aufbereitung dieser Daten notwendig sind. Die Verfügbarkeit und die Eigenschaften der einzelnen Werkzeuge sind in der nachstehenden Tabelle dargestellt. Die Toolbox wird kontinuierlich erweitert und verbessert.
 
-Bitte beachten Sie, dass diese Applikation darauf abzielt, die Möglichkeiten verschiedener Large Language Model (LLM)-Technologien zu demonstrieren. Jedes Werkzeug ist so konzipiert, dass es sowohl eigenständig als auch in einen bestehenden Prozess integriert verwendet werden kann.
+Bitte beachte, dass diese Applikation darauf abzielt, die Möglichkeiten verschiedener Large Language Model (LLM)-Technologien zu demonstrieren. Jedes Werkzeug ist so konzipiert, dass es sowohl in dieserApplikation als auch eigenständig in einen bestehenden Prozess integriert verwendet werden kann.
 
 | Funktionen | Verfügbarkeit |
 |------------|---------------|

@@ -532,7 +532,10 @@ def url_exists(url: str) -> bool:
     Returns:
         bool: True if the PDF file exists, False otherwise.
     """
-    response = requests.head(url)
+    try:
+        response = requests.head(url)
+    except requests.exceptions.RequestException as e:
+        return False, str(e)
     return (response.status_code < 400), response.status_code
 
 

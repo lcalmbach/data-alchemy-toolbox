@@ -60,8 +60,6 @@ class Speech2Text(ToolBase):
                 if ok:
                     self.output_file = file
                     st.audio(self.output_file)
-            else:
-                st.error(err_msg)
         elif self.formats.index(self.input_type) == InputFormat.ZIPPED_FILE.value:
             self.input_file = st.file_uploader(
                 "ZIP Datei mit gezippten MP4 oder MP3 Dateien hochladen",
