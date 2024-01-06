@@ -10,7 +10,13 @@ from io import BytesIO
 import base64
 import zipfile
 
-from helper import init_logging, save_uploadedfile, encode_image, convert_df_to_csv, url_exists
+from helper import (
+    init_logging,
+    save_uploadedfile,
+    encode_image,
+    convert_df_to_csv,
+    url_exists,
+)
 from tools.tool_base import ToolBase, TEMP_PATH, OUTPUT_PATH, DEMO_PATH
 
 
@@ -206,7 +212,7 @@ class Image2Text(ToolBase):
             metadata = self.extract_metadata(self.input_file)
             with st.expander("EXIF Metadaten"):
                 st.write(metadata)
-        if st.button("Bild zu Text", disabled = not ok):
+        if st.button("Bild zu Text", disabled=not ok):
             self.text = None
             with st.spinner("Bilderkennung läuft..."):
                 self.text = self.image2text(self.input_file)

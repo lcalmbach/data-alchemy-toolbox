@@ -18,7 +18,7 @@ from tools.tool_base import (
 
 
 DEFAULT_MODEL = "gpt-3.5-turbo"
-DEMO_TEXTS_FILES = [DEMO_PATH + '000000406047.pdf', DEMO_PATH + 'drohbrief.txt']
+DEMO_TEXTS_FILES = [DEMO_PATH + "000000406047.pdf", DEMO_PATH + "drohbrief.txt"]
 
 
 class InputFormat(Enum):
@@ -55,10 +55,9 @@ class Moderator(ToolBase):
         def manage_demo():
             ...
 
-
         def manage_file_upload():
             st.info("Noch nicht implementiert.")
-        
+
         self.input_type = st.radio("Input", options=self.formats)
         if self.formats.index(self.input_type) == InputFormat.DEMO.value:
             manage_demo()
@@ -66,7 +65,6 @@ class Moderator(ToolBase):
             manage_file_upload()
         else:
             st.warning("Diese Option wird noch nicht unterstützt.")
-
 
     def run(self):
         """
@@ -91,11 +89,15 @@ class Moderator(ToolBase):
         else:
             with open(file, "r", encoding="utf-8") as file:
                 self.texts_input = file.read()
-        self.texts_input = st.text_area("Text", value=self.texts_input, height=300, help="Du kannst diesen Text manuell anpassen um die Sensitivität der Analyse für verschiedene Kategorien zu testen.")
+        self.texts_input = st.text_area(
+            "Text",
+            value=self.texts_input,
+            height=300,
+            help="Du kannst diesen Text manuell anpassen um die Sensitivität der Analyse für verschiedene Kategorien zu testen.",
+        )
         if st.button("Text überprüfen"):
             output = self.usage_compliance_check(self.texts_input)
-            flagged = output['results'][0]['flagged']
+            flagged = output["results"][0]["flagged"]
             st.markdown(f"Resultat der Überprüfung: {'❌' if flagged else '✅'}")
             with st.expander(f"Details der Überprüfung nach Kategorie"):
-                st.write(output['results'][0])
-
+                st.write(output["results"][0])

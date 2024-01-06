@@ -9,7 +9,7 @@ from helper import (
     extract_text_from_url,
     empty_folder,
     url_exists,
-    get_original_url
+    get_original_url,
 )
 from whoosh.index import create_in
 from whoosh import index
@@ -101,18 +101,18 @@ class Finder(ToolBase):
             return index.open_dir(source["indexdir"])
 
     def add_document(self, doc: Document):
-            """
-            Adds a document to the index.
+        """
+        Adds a document to the index.
 
-            Args:
-                doc (Document): The document to be added.
+        Args:
+            doc (Document): The document to be added.
 
-            Returns:
-                None
-            """
-            writer = self.ix.writer()
-            writer.add_document(title=doc.title, path=doc.path, content=doc.content)
-            writer.commit()
+        Returns:
+            None
+        """
+        writer = self.ix.writer()
+        writer.add_document(title=doc.title, path=doc.path, content=doc.content)
+        writer.commit()
 
     def document_exists_in_index(self, field: str, value: str):
         """
@@ -128,7 +128,7 @@ class Finder(ToolBase):
 
         # Create a searcher
         with self.ix.searcher() as searcher:
-            query = Term(field,  value)
+            query = Term(field, value)
             results = searcher.search(query)
             return not results.is_empty()
 
@@ -166,9 +166,13 @@ class Finder(ToolBase):
                     time.sleep(sleep_time)
                 placeholder.markdown(f"Indexiere ({cnt}/{len(df)}) {row['title']}")
             elif not exists:
-                st.warning(f"({cnt}/{len(df)}) Status {status_code} für Dokument {row['title']} existiert nicht ({row['url']})")
+                st.warning(
+                    f"({cnt}/{len(df)}) Status {status_code} für Dokument {row['title']} existiert nicht ({row['url']})"
+                )
             else:
-                placeholder.markdown(f"({cnt}/{len(df)}) {row['title']} existiert bereits in index")
+                placeholder.markdown(
+                    f"({cnt}/{len(df)}) {row['title']} existiert bereits in index"
+                )
             cnt += 1
             if cnt > max_docs:
                 placeholder.warning(f"Maximale Anzahl Dokumente erreicht ({max_docs})")
@@ -253,16 +257,18 @@ class Finder(ToolBase):
                         min_value=1,
                         max_value=MAX_DOCS,
                         value=MAX_DOCS,
-                        help="Die Anzahl der indexierbaren Dokumente ist in dieser App begrenzt, um den Server nicht zu überlasten."
+                        help="Die Anzahl der indexierbaren Dokumente ist in dieser App begrenzt, um den Server nicht zu überlasten.",
                     )
                     sleep_time = st.number_input(
                         "Wartezeit zwischen den Anfragen (in Sekunden)",
                         min_value=0,
                         max_value=MAX_WAIT_SECS,
                         value=0,
-                        help="Manche Server blockieren Anfragen, wenn zu viele Anfragen in zu kurzer Zeit gestellt werden."
+                        help="Manche Server blockieren Anfragen, wenn zu viele Anfragen in zu kurzer Zeit gestellt werden.",
                     )
-                    st.markdown("Damit der Inhalt dieser Dokumente für eine Suche bereitsteht, müssen sie zuerst indexiert werden. Klicke auf die Schaltfläche unten um den Prozess zu starten.")
+                    st.markdown(
+                        "Damit der Inhalt dieser Dokumente für eine Suche bereitsteht, müssen sie zuerst indexiert werden. Klicke auf die Schaltfläche unten um den Prozess zu starten."
+                    )
                     if st.button("Dokumente indexierenmm"):
                         placeholder = st.empty()
                         self.index_documents(df, placeholder, max_docs, sleep_time)

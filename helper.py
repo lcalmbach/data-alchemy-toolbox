@@ -3,6 +3,7 @@ import json
 import io
 import os
 from io import StringIO
+from io import BytesIO
 import socket
 import string
 import csv
@@ -318,6 +319,14 @@ def check_file_type(uploaded_file):
     if type == "unknown":
         type = check_msoffice_format()
     return type
+
+
+def get_image_from_url(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        return BytesIO(response.content)
+    else:
+        return None
 
 
 def extract_text_from_url(url: str):

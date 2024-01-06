@@ -13,13 +13,15 @@ from tools import (
     pdfchat,
     image2text,
     finder,
-    moderator
+    moderator,
+    text2speech,
+    imagegen,
 )
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2024-03-04"
+VERSION_DATE = "2024-03-06"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
@@ -38,8 +40,11 @@ menu_dic = {
     "Tokenizer": tokenizer.Tokenizer,
     "Finder": finder.Finder,
     "Unangemessene Inhalte": moderator.Moderator,
+    "Text zu Audio": text2speech.Text2Speech,
+    "Bildgenerator": imagegen.ImageGenerator,
 }
 
+# https://icons.getbootstrap.com/?q=image
 menu_icons = [
     "house",
     "person",
@@ -52,7 +57,9 @@ menu_icons = [
     "chat",
     "body-text",
     "search",
-    "sign-stop"
+    "sign-stop",
+    "soundwave",
+    "card-image",
 ]
 
 

@@ -119,7 +119,7 @@ class ToolBase:
         client = OpenAI()
         response = client.moderations.create(input=text)
         return response.model_dump()
-    
+
     def show_settings(self):
         pass
 

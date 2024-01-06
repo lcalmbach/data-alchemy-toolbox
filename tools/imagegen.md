@@ -1,0 +1,5 @@
+
+Dieses Tool ermöglicht es, automatisiert Bilder basierend auf Beschreibungen des Nutzenden zu erstellen. Die App verwendet das OpenAI ChaptGpt4 API DAllE-3. 
+
+**Anwendungsmöglichkeiten**:
+Bilder werden auch im Verwaltungsumfeld immer wieder gebraucht, z.B. für die Erstellung von Präsentationen, Berichten oder für die Verwendung in sozialen Medien. Allerdings gibt es bereits eine Vielzahl von Anbietern, welche die Funktionailität zumindest für eine kleine Anzahl Bilder gratis zur Verfügung stellt. Die Verwendung von DAllE-3 ist daher vor allem dann sinnvoll, wenn Bilder weitgehend automatisiert und, oder in grosser Anzahl erstellt werden sollen. z.B. Wenn kann auf einer Website die aktuelle Temperatur als Bild angezeigt werden soll, wobei die Darstellung der Zahl die Temperatur repräsentiert. Zum Beispiel bei grösser 30 Grad wird eine schmelzende Zahl in Orange-Tönen gezeigt, bei -5 eine schlotternde Zahl in Blautönen. entsprechende Grafiken können für verschiedene Temperaturen automatisiert erstellt werden und dann bei der Anzeige der Temperatur auf der Website verwendet werden.
