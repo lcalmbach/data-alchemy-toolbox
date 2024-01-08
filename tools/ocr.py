@@ -48,7 +48,7 @@ class Ocr(ToolBase):
             "textract",
             aws_access_key_id=get_var("aws_access_key_id"),
             aws_secret_access_key=get_var("aws_secret_access_key"),
-            region_name=get_var("aws_region"),
+            region_name='eu-central-1',
         )
         with open(DEMO_FILE, "rb") as image:
             f = image.read()
