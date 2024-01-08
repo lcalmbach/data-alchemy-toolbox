@@ -42,7 +42,7 @@ class Ocr(ToolBase):
         Returns:
             list: A list of Textract blocks containing the extracted text.
         """
-        textract = boto3.client('textract', region='eu-central-1')
+        textract = boto3.client('textract', region_name='eu-central-1')
         with open(DEMO_FILE, "rb") as image:
             f = image.read()
             image_data = bytearray(f)
