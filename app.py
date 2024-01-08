@@ -16,7 +16,7 @@ from tools import (
     moderator,
     text2speech,
     imagegen,
-    ocr
+    ocr,
 )
 
 __version__ = "0.1.6"
@@ -62,7 +62,7 @@ menu_icons = [
     "sign-stop",
     "soundwave",
     "card-image",
-    "card-text"
+    "card-text",
 ]
 
 
