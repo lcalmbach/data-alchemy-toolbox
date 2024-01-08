@@ -16,12 +16,13 @@ from tools import (
     moderator,
     text2speech,
     imagegen,
+    ocr
 )
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2024-03-06"
+VERSION_DATE = "2024-03-08"
 MY_EMOJI = "🔧"
 MY_NAME = "Data Alchemy Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
@@ -42,6 +43,7 @@ menu_dic = {
     "Unangemessene Inhalte": moderator.Moderator,
     "Text zu Audio": text2speech.Text2Speech,
     "Bildgenerator": imagegen.ImageGenerator,
+    "Texterkennung": ocr.Ocr,
 }
 
 # https://icons.getbootstrap.com/?q=image
@@ -60,6 +62,7 @@ menu_icons = [
     "sign-stop",
     "soundwave",
     "card-image",
+    "card-text"
 ]
 
 

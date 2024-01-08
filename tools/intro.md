@@ -17,6 +17,9 @@ Bitte beachte, dass diese Applikation darauf abzielt, die Möglichkeiten verschi
 | **Tokenizer** gibt die Anzahl Tokens in Texten und Dokumenten an | ✅ |
 | **Finder** erlaubt es eine Sammlung von Dokumenten zu laden, oder per csv Datei zu referenzieren und die Dokumente zu durchsuchen | ✅ |
 | **Unangemessene Inhalte** verwendet das Moderation-API um Text auf problematische Inhalte zu untersuchen. | 🚧 | 
+| **Text zu Audio** wandelt Texte in gesprochene Sprache um. | 🚧 | 
+| **Bildgenerator** erlaubt es, Bilder in verschiedenen Formaten zu generieren. Es wird das [DALLE-3](https://openai.com/dall-e-3) API verwendet. | 🚧 |
+| **Texterkennung** Erlaubt es, Texte aus Bilddateien zu extrahieren. Es wird Amazon-Textract verwendet| 🚧 |
 </br>
 
 | **Legende zur Verfügbarkeit:** | |
