@@ -2,8 +2,6 @@ import streamlit as st
 import os
 from enum import Enum
 import boto3
-import cv2
-from PIL import Image
 
 from helper import (
     get_var,
@@ -102,24 +100,6 @@ class Ocr(ToolBase):
             )   
         return response["Blocks"]
 
-    def mark_elements_on_image(self, image_path, elements):
-        # Load the image
-        image = cv2.imread(image_path)
-        
-        # Draw rectangles around each element
-        for el in elements:
-            top_left = (el['Left'], el['Top'])
-            bottom_right = (el['Left'] + el['Width'], el['Top'] + el['Height'])
-            image = cv2.rectangle(image, top_left, bottom_right, (255, 0, 0), 2)  # Red box
-        
-        # Convert the image back to PIL format and save or display
-        image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        st.write(type(image))
-        # Save or display the image
-        marked_image_path = 'marked_' + image_path
-        image.save(marked_image_path)
-        st.image(marked_image_path)
-        return marked_image_path
 
     def run(self):
         with st.expander("Vorschau Dokument", expanded=False):
