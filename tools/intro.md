@@ -14,7 +14,7 @@ Bitte beachte, dass diese Applikation darauf abzielt, die Möglichkeiten verschi
 | Übersetzung von Texten | ✅ |
 | **PDF2TXT**: Umwandlung von PDF-Dateien in Text | ✅ |
 | **PDF Chatbot** beantwortet Fragen zu einem geladenen Dokument | ✅ |
-| **Tokenizer** gibt die Anzahl Tokens in Texten und Dokumenten an | ✅ |
+| **Tokenizer** gibt die Anzahl Sätze, Wörter und Tokens in Texten und Dokumenten an | ✅ |
 | **Finder** erlaubt es eine Sammlung von Dokumenten zu laden, oder per csv Datei zu referenzieren und die Dokumente zu durchsuchen | ✅ |
 | **Unangemessene Inhalte** verwendet das Moderation-API um Text auf problematische Inhalte zu untersuchen. | 🚧 | 
 | **Text zu Audio** wandelt Texte in gesprochene Sprache um. | 🚧 | 

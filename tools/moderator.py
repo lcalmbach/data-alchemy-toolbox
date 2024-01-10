@@ -96,8 +96,13 @@ class Moderator(ToolBase):
             help="Du kannst diesen Text manuell anpassen um die Sensitivität der Analyse für verschiedene Kategorien zu testen.",
         )
         if st.button("Text überprüfen"):
-            output = self.usage_compliance_check(self.texts_input)
-            flagged = output["results"][0]["flagged"]
-            st.markdown(f"Resultat der Überprüfung: {'❌' if flagged else '✅'}")
-            with st.expander(f"Details der Überprüfung nach Kategorie"):
-                st.write(output["results"][0])
+            sentences = self.texts_input.split(".")
+            results = []
+            for sentence in sentences:
+                output = self.usage_compliance_check(sentence)
+                flagged = output["results"][0]["flagged"]
+                results.append(flagged)
+                flag = '❌' if flagged else '✅'
+                with st.expander(f"{sentence}: {flag}"):
+                    st.write(output["results"][0])
+            st.markdown(f"Gesamtergebnis: {'❌' if any(results) else '✅'}")
