@@ -96,7 +96,7 @@ class Ocr(ToolBase):
             image_data = bytearray(self.input_file.getvalue())
             response = textract.analyze_document(
                 Document={"Bytes": image_data},
-                FeatureTypes=['FORMS'] # [self.feature_type]
+                FeatureTypes=[self.feature_type]
             )   
         return response["Blocks"]
 

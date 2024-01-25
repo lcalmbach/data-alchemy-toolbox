@@ -21,10 +21,10 @@ from tools.tool_base import ToolBase, MODEL_OPTIONS, LOGFILE, OUTPUT_PATH
 logger = init_logging(__name__, LOGFILE)
 
 DEMO_FILE = "./data/demo/demo_summary.txt"
-SYSTEM_PROMPT_TEMPLATE = "You will be provided with a text. Your task is to summarize the text in german. The summary should contain a maximum of {}"
+SYSTEM_PROMPT_TEMPLATE = "You will be provided with a text. Your task is to summarize the text in German. The summary should contain a maximum of {}"
 LIMIT_OPTIONS = ["Zeichen", "Tokens", "Sätze"]
 FILE_FORMAT_OPTIONS = ["pdf", "txt"]
-INPUT_FORMAT_OPTIONS = ["Demo", "Eine Datei", "Mehrere Dateien gezippt", "S3-Bucket"]
+INPUT_FORMAT_OPTIONS = ["Demo", "Datei Hochladen", "ZIP hochladen", "S3-Bucket"]
 
 
 class limitType(Enum):
@@ -73,7 +73,7 @@ class Summary(ToolBase):
         return SYSTEM_PROMPT_TEMPLATE.format(limit_expression)
 
     def show_settings(self):
-        self.input_format = st.selectbox(
+        self.input_format = st.radio(
             label="Input Format", options=INPUT_FORMAT_OPTIONS
         )
         self.model = self.get_model()
@@ -117,11 +117,21 @@ class Summary(ToolBase):
                 type=["zip"],
                 help="Laden Sie die Datei hoch, die Sie zusammenfassen möchten. Die ZIP Datei darf Dateien im Format txt und pdf enthalten.",
             )
+            if self.input_file:
+                with st.expander("ZIP Datei Inhalt"):
+                    # Preview zip content
+                    with zipfile.ZipFile(self.input_file, "r") as zip_ref:
+                        for file in zip_ref.infolist():
+                            st.markdown(f"- {file.filename}")
+                self.output_file = (
+                    OUTPUT_PATH
+                    + self.input_file.name.replace(".zip", "_output.zip")
+                )
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value:
             self.s3_input_bucket = st.text_input(
                 "S3-Bucket",
                 value=self.bucket_name,
-                help="Geben Sie die ARN des S3-Buckets ein, der die Dateien enthält, die Sie zusammenfassen möchten.",
+                help="Gib die ARN des S3-Buckets ein, der die Dateien enthält, die du zusammenfassen möchten. Beachte, dass die Applikation Leserecht auf dem bucket haben muss oder dass der Bucket öffentlich zugänglich ist.",
             )
 
     def run(self):

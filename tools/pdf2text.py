@@ -27,7 +27,7 @@ class Pdf2Text(ToolBase):
         self.formats = [
             "PDF Datei hochladen",
             "URL",
-            "Sammlung von PDF-Dateien (zip)",
+            "ZIP-Datei",
             "S3 Bucket",
         ]
         self.text = None
@@ -39,7 +39,6 @@ class Pdf2Text(ToolBase):
     def show_settings(self):
         self.input_type = st.radio("Input Format", options=self.formats)
         self.remove_crlf = st.checkbox("Zeilenendezeichen entfernen")
-        self.remove_sep = st.checkbox(";-Zeichen entfernen")
 
         self.encoding_source = st.selectbox(
             label="Quellen-Encoding", options=ENCODING_OPTIONS
@@ -71,8 +70,6 @@ class Pdf2Text(ToolBase):
         text = text.replace("-\n", "")
         if self.remove_crlf:
             text = text.replace("\n", " ")
-        if self.remove_sep:
-            text = text.replace(";", "")
         # pattern = r'(?<!\.\s)(?<!\!\s)(?<!\?\s)\n'
         # text = re.sub(pattern, ' ', text)
         return text
