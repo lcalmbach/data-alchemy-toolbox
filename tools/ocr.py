@@ -28,7 +28,7 @@ class InputFormat(Enum):
 INPUT_TYPE_OPTIONS = {
     InputFormat.DEMO.value: "Demo",
     InputFormat.FILE.value: "Bild hochladen",
-    InputFormat.S3.value: "S3 Bucket"
+    InputFormat.S3.value: "S3 Bucket",
 }
 
 
@@ -50,21 +50,23 @@ class Ocr(ToolBase):
         self.input_type = st.selectbox(
             label="Quelle",
             options=INPUT_TYPE_OPTIONS.keys(),
-            format_func=lambda x: INPUT_TYPE_OPTIONS[x]
+            format_func=lambda x: INPUT_TYPE_OPTIONS[x],
         )
         self.feature_type = st.selectbox(
             "Analyse",
             options=FEATURE_TYPES_OPTIONS.keys(),
-            format_func=lambda x: FEATURE_TYPES_OPTIONS[x]
+            format_func=lambda x: FEATURE_TYPES_OPTIONS[x],
         )
         if self.input_type == InputFormat.DEMO.value:
             self.input_file = DEMO_FILE
         elif self.input_type == InputFormat.FILE.value:
             self.input_file = None
-            uploaded_file = st.file_uploader("Datei hochladen", type=FILE_FORMAT_OPTIONS)
+            uploaded_file = st.file_uploader(
+                "Datei hochladen", type=FILE_FORMAT_OPTIONS
+            )
             if uploaded_file is not None:
                 self.input_file = uploaded_file
-        
+
         if self.input_file is not None:
             st.image(self.input_file)
 
@@ -87,19 +89,17 @@ class Ocr(ToolBase):
                 image_data = bytearray(f)
         elif self.input_type == InputFormat.FILE.value:
             image_data = bytearray(self.input_file.getvalue())
-        
+
         if self.feature_type == "DOCUMENT":
             response = textract.detect_document_text(
                 Document={"Bytes": image_data},
-            )   
+            )
         else:
             image_data = bytearray(self.input_file.getvalue())
             response = textract.analyze_document(
-                Document={"Bytes": image_data},
-                FeatureTypes=[self.feature_type]
-            )   
+                Document={"Bytes": image_data}, FeatureTypes=[self.feature_type]
+            )
         return response["Blocks"]
-
 
     def run(self):
         with st.expander("Vorschau Dokument", expanded=False):
@@ -118,5 +118,3 @@ class Ocr(ToolBase):
                 st.write(texts)
                 # st.write(elements)
                 # self.mark_elements_on_image(self.input_file, elements)
-
-

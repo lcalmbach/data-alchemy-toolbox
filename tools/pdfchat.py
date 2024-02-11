@@ -31,7 +31,7 @@ class PdfChat(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
         self.title = "💬 PDF-Chat"
-        self.model = "gpt-3.5-turbo"
+        self.model = 'gpt-3.5-turbo-instruct'
         self.formats = ["Demo", "PDF Datei hochladen", "URL"]
         self._input_type = None
         self.text = None
@@ -138,7 +138,7 @@ class PdfChat(ToolBase):
         if st.button("📨 Abschicken", disabled=(ok is False)):
             knowledgeBase = self.process_text(self.text)
             docs = knowledgeBase.similarity_search(self.user_prompt)
-            llm = OpenAI(api_key=get_var("OPENAI_API_KEY"))
+            llm = OpenAI(model=self.model, api_key=get_var("OPENAI_API_KEY"))
 
             chain = load_qa_chain(llm, chain_type="stuff")
             with get_openai_callback() as cost:

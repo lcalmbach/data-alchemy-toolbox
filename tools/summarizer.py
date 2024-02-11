@@ -1,12 +1,13 @@
 import streamlit as st
+import pandas as pd
 import zipfile
 import os
 from enum import Enum
 import boto3
+import json
 from io import BytesIO
 from helper import (
     init_logging,
-    split_text,
     check_file_type,
     extract_text_from_uploaded_file,
     show_download_button,
@@ -15,13 +16,17 @@ from helper import (
     download_file_button,
     get_var,
     get_token_size,
+    display_pdf,
+    extract_text_from_file,
+    save_json_object,
 )
+from tools.tokenizer import split_text, calc_token_size
 from tools.tool_base import ToolBase, MODEL_OPTIONS, LOGFILE, OUTPUT_PATH
 
 logger = init_logging(__name__, LOGFILE)
 
-DEMO_FILE = "./data/demo/demo_summary.txt"
-SYSTEM_PROMPT_TEMPLATE = "You will be provided with a text. Your task is to summarize the text in German. The summary should contain a maximum of {}"
+DEMO_FILES = "./data/demo/summary_folder/"
+SYSTEM_PROMPT_TEMPLATE = "You will be provided with a text. Your task is to summarize the text in German. The summary should contain a maximum of {}. Focus on the main results."
 LIMIT_OPTIONS = ["Zeichen", "Tokens", "Sätze"]
 FILE_FORMAT_OPTIONS = ["pdf", "txt"]
 INPUT_FORMAT_OPTIONS = ["Demo", "Datei Hochladen", "ZIP hochladen", "S3-Bucket"]
@@ -51,31 +56,30 @@ class Summary(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
         self.logger = logger
+        self.model = MODEL_OPTIONS[1]
         self.title = "Zusammenfassung"
         self.script_name, script_extension = os.path.splitext(__file__)
-        self.intro = self.get_intro()
-        self.input_format = INPUT_FORMAT_OPTIONS[0]
 
         self.limit_type = LIMIT_OPTIONS[0]
         self.limit_number = 500
         self.model = MODEL_OPTIONS[1]
-        self.input_file = None
+        self.input_files = []
         self.output_file = None
+        self.results = []
         self.bucket_name = "data-alchemy-bucket-01"
         self.input_prefix = "input/"
         self.output_prefix = "output/"
-        with open(DEMO_FILE, "r", encoding="utf8") as file:
-            self.text = file.read()
+        self.text = ""
 
+        self.intro = self.get_intro()
+        self.input_format = INPUT_FORMAT_OPTIONS[0]
     @property
     def system_prompt(self):
         limit_expression = f"{self.limit_number} {self.limit_type}"
         return SYSTEM_PROMPT_TEMPLATE.format(limit_expression)
 
     def show_settings(self):
-        self.input_format = st.radio(
-            label="Input Format", options=INPUT_FORMAT_OPTIONS
-        )
+        self.input_format = st.radio(label="Input Format", options=INPUT_FORMAT_OPTIONS)
         self.model = self.get_model()
         st.markdown("Begrenze die Zusammenfassung auf")
         cols = st.columns([1, 1, 2])
@@ -94,14 +98,28 @@ class Summary(ToolBase):
                 index=0,
                 help="Wähle die Einheit der Limite, die du verwenden möchtest.",
             )
-
+        st.markdown("---")
         if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.DEMO.value:
-            self.text = st.text_area(
-                "Demo Text für die Zusammenfassung",
-                value=self.text,
-                height=400,
-                help="Geben Sie den Text ein, den Sie zusammenfassen möchten.",
+            files = os.listdir(DEMO_FILES)
+            selected = [True for x in files if x.endswith(".pdf")]
+            df = pd.DataFrame({"datei": files, "auswahl": selected})
+            st.markdown("Wähle die Dateien, die du zusammenfassen möchtest.")
+            df = st.data_editor(df)
+            self.input_files = df[df["auswahl"] == True]["datei"].tolist()
+            sel_preview = st.selectbox("Vorschau", options=self.input_files)
+            preview_type = st.radio(
+            "Vorschau Format", options=["pdf", "text"], help = 'PDF Vorschau: nur für Dokumente < 2MB'
             )
+            file_path = os.path.join(DEMO_FILES, sel_preview)
+            if preview_type.startswith("pdf"):
+                display_pdf(file_path)
+            else:
+                text = extract_text_from_file(file_path)
+                self.text = st.text_area(
+                    "Extrahierter Text aus Dokument {sel_preview}",
+                    value=text,
+                    height=400,
+                )
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.FILE.value:
             self.input_file = st.file_uploader(
                 "PDF oder Text Datei",
@@ -123,9 +141,8 @@ class Summary(ToolBase):
                     with zipfile.ZipFile(self.input_file, "r") as zip_ref:
                         for file in zip_ref.infolist():
                             st.markdown(f"- {file.filename}")
-                self.output_file = (
-                    OUTPUT_PATH
-                    + self.input_file.name.replace(".zip", "_output.zip")
+                self.output_file = OUTPUT_PATH + self.input_file.name.replace(
+                    ".zip", "_output.zip"
                 )
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value:
             self.s3_input_bucket = st.text_input(
@@ -134,13 +151,22 @@ class Summary(ToolBase):
                 help="Gib die ARN des S3-Buckets ein, der die Dateien enthält, die du zusammenfassen möchten. Beachte, dass die Applikation Leserecht auf dem bucket haben muss oder dass der Bucket öffentlich zugänglich ist.",
             )
 
-    def run(self):
-        def show_summary_text_field():
-            st.markdown(self.token_use_expression())
-            st.text_area("Zusammenfassung", value=self.output, height=400)
-            show_download_button(text_data=self.output)
+    def extract_title(self, text: str):
+        prompt = f"Extract the title for the following text:\n\n{text}"
+        title, tokens = self.get_completion(text=prompt, index=0)
+        return title, tokens
 
-        def generate_summary(text: str, placeholder) -> str:
+    def save_file(self, file: str, result: dict):
+        file_path = os.path.join(OUTPUT_PATH, file.replace(".pdf", ".json"))
+        save_json_object(result, file_path)
+
+    def run(self):
+        def show_summary_text_field(result):
+            st.markdown(f"**Titel:** {result['title']}")
+            st.text_area("Zusammenfassung", value=result['summary'], height=400)
+            show_download_button(text_data=json.dumps(result, indent=4))
+
+        def generate_summary(text: str, file: str, placeholder) -> str:
             """
             Generate a summary of the given text. if the text does not fit into the max_tokens limit,
             it is split into chunks and a summary is generated for each chunk.
@@ -153,36 +179,39 @@ class Summary(ToolBase):
                 str: The generated summary of the text.
             """
             self.tokens_in, self.tokens_out = 0, 0
-            buffer_number = self.limit_number
-            buffer_type = self.limit_type
-            self.limit_number = 1
-            self.limit_type = "sentence"
-            input_chunks = split_text(text, chunk_size=self.chunk_size())
+            input_chunks = split_text(
+                text,
+                system_prompt=self.system_prompt,
+                model_name=self.model,
+                max_tokens_per_chunk=self.chunk_size(),
+            )
             output_chunks = []
             for chunk in input_chunks:
                 response, tokens = self.get_completion(text=chunk, index=0)
                 output_chunks.append(response)
                 placeholder.write(
-                    f"Chunk {input_chunks.index(chunk) + 1} / {len(input_chunks)} completed"
+                    f"File: {file}: Chunk {input_chunks.index(chunk) + 1} / {len(input_chunks)} completed"
                 )
-                self.tokens_in += tokens[0]
-                self.tokens_out += tokens[1]
-            self.limit_number = buffer_number
-            self.limit_type = buffer_type
 
-            # generate a summary for all chunks
             text = " ".join(output_chunks)
             # make sure the summary is not longer than the limit
-            input_chunks = split_text(text, chunk_size=self.chunk_size())
+            input_chunks = split_text(
+                text,
+                system_prompt=self.system_prompt,
+                model_name=self.model,
+                max_tokens_per_chunk=self.chunk_size(),
+            )
             if len(input_chunks) > 1:
                 logger.info(
-                    f"Summary too long after summarizing the document in chunks. Only the first {self.chunk_size()} of {get_token_size(text)} tokens were used for summary."
+                    f"Der Text ist für eine Zusammenfassung mit diesem Modell zu lang. Nur die ersten {self.chunk_size()} von {get_token_size(text)} token werden verwendet."
                 )
-            self.output, tokens = self.get_completion(text=input_chunks[0], index=0)
-            self.tokens_in += tokens[0]
-            self.tokens_out += tokens[1]
+            text, tokens = self.get_completion(text=input_chunks[0], index=0)
+            return text, tokens
 
+        self.display_selected_model()
+        st.markdown(f"{len(self.input_files)} Dateien werden zusammengefasst.")
         if st.button("Zusammenfassung"):
+            self.results = []
             with st.spinner("Generiere Zusammenfassung..."):
                 self.errors = []
                 placeholder = st.empty()
@@ -190,9 +219,15 @@ class Summary(ToolBase):
                     INPUT_FORMAT_OPTIONS.index(self.input_format)
                     == InputFormat.DEMO.value
                 ):
-                    self.output, tokens = self.get_completion(text=self.text, index=0)
-                    self.tokens_in, self.tokens_out = tokens
-                    show_summary_text_field()
+                    for file in self.input_files:
+                        text = extract_text_from_file(os.path.join(DEMO_FILES, file))
+                        title, tokens = self.extract_title(text[:500])
+                        self.add_tokens(tokens)
+                        summary, tokens = generate_summary(text, file, placeholder)
+                        self.add_tokens(tokens)
+                        result = {'title': title, 'summary': summary, 'tokens_in': tokens[0], 'tokens_out': tokens[1]}
+                        self.results.append(result)
+                        self.save_file(file, result)
 
                 elif (
                     INPUT_FORMAT_OPTIONS.index(self.input_format)
@@ -306,6 +341,12 @@ class Summary(ToolBase):
                         st.success(
                             f"Alle Dateien wurden zusammengefasst und im Bucket {self.bucket_name}{self.output_prefix} abgelegt."
                         )
-                        st.markdown(self.token_use_expression())
                     else:
                         st.write("No files in the bucket.")
+               
+                if len(self.results) > 0:
+                    st.markdown('---')
+                    with st.expander('Verwendete Tokens'):
+                        st.markdown(self.token_use_expression())
+                    for result in self.results:
+                        show_summary_text_field(result)

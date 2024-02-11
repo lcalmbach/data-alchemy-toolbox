@@ -9,23 +9,26 @@ import json
 
 MAX_ERRORS = 3
 LLM_RETRIES = 3
-TEMP_PATH = "./data/temp/"
-OUTPUT_PATH = "./data/output/"
-INDEX_PATH = "./data/index/"
-DEMO_PATH = "./data/demo/"
-DOCS_PATH = DEMO_PATH + "docs/"
-ENCODING_OPTIONS = ["utf-8", "latin1", "cp1252"]
-LOGFILE = "./data-alchemy-toolbox.log"
+TEMP_PATH = './data/temp/'
+OUTPUT_PATH = './data/output/'
+INDEX_PATH = './data/index/'
+DEMO_PATH = './data/demo/'
+DOCS_PATH = DEMO_PATH + 'docs/'
+ENCODING_OPTIONS = ['utf-8', 'latin1', 'cp1252']
+LOGFILE = './data-alchemy-toolbox.log'
 SLEEP_TIME_AFTER_ERROR = 30
 DEFAULT_TEMPERATURE = 0.3
 DEFAULT_MAX_TOKENS = 500
-MODEL_OPTIONS = ["gpt-3.5-turbo", "gpt-3.5-turbo-1106"]
+MODEL_OPTIONS = ['gpt-3.5-turbo', 'gpt-3.5-turbo-1106', 'gpt-4', 'gpt-4-0125-preview']
 MODEL_TOKEN_PRICING = {
-    MODEL_OPTIONS[0]: {"in": 0.0015, "out": 0.002},
-    MODEL_OPTIONS[1]: {"in": 0.0030, "out": 0.004},
+    MODEL_OPTIONS[0]: {'in': 0.0015, 'out': 0.002},
+    MODEL_OPTIONS[1]: {'in': 0.0030, 'out': 0.004},
+    MODEL_OPTIONS[2]: {'in': 0.03, 'out': 0.05},
+    MODEL_OPTIONS[3]: {'in': 0.01, 'out': 0.03},
+
 }
-MODEL_MAX_TOKENS = {MODEL_OPTIONS[0]: 4096, MODEL_OPTIONS[1]: 16385}
-DEV_WORKSTATIONS = ["Liestal"]
+MODEL_MAX_TOKENS = {MODEL_OPTIONS[0]: 4096, MODEL_OPTIONS[1]: 16385, MODEL_OPTIONS[2]: 8192, MODEL_OPTIONS[3]: 32768}
+DEV_WORKSTATIONS = ['Liestal']
 
 
 class ToolBase:
@@ -38,14 +41,16 @@ class ToolBase:
         self.tokens_out = 0
 
     def chunk_size(self):
-        return MODEL_MAX_TOKENS[self.model] - 2000
+        return MODEL_MAX_TOKENS[self.model]
 
     def get_model(self):
+        index = MODEL_OPTIONS.index(self.model) if self.model else 0
         return st.selectbox(
             "Modell",
             options=MODEL_OPTIONS,
-            index=0,
+            index=index,
             help="Wählen Sie das LLM Modell, das Sie verwenden möchten.",
+
         )
 
     def get_intro(self):
@@ -75,6 +80,11 @@ class ToolBase:
         encoding = tiktoken.get_encoding(encoding_name)
         num_tokens = len(encoding.encode(string))
         return num_tokens
+
+    def add_tokens(self, tokens: list):
+        if tokens:
+            self.tokens_in += tokens[0]
+            self.tokens_out += tokens[1]
 
     def get_completion(self, text, index):
         """Generates a response using the OpenAI ChatCompletion API based on
@@ -122,6 +132,9 @@ class ToolBase:
 
     def show_settings(self):
         pass
+    
+    def display_selected_model(self):
+        st.markdown(f'{self.model}: {self.chunk_size()} Token')
 
     def show_ui(self):
         """

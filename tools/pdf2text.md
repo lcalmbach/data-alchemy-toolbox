@@ -16,4 +16,4 @@ Nach der Verarbeitung kannst du die resultierende ZIP-Datei mit dem Download-But
 
 Anwendungsmöglichkeiten:
 - Integration in Prozessketten zur Verarbeitung von PDF-Dokumenten, beispielsweise als Vorstufe für die Indexierung von Dokumentensammlungen die anschliessend über den Index durchsucht werden können.
-- Unterstützung bei der Erstellung bei allen Aufgaben, bei denen die Quelle im pdf Foramt vorliegt und deren Text an ein Large Language Model übergeben werden sollen.
+- Unterstützung bei der Erstellung bei allen Aufgaben, bei denen die Quelle im pdf Format vorliegt und deren Text an ein Large Language Model übergeben werden sollen.

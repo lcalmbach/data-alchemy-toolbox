@@ -1,6 +1,7 @@
 env
 work
-__pychache__
+./__pycache__
+./tools/__pycache__
 test*.*
 ./data/output/*.csv
 ./data/output/*.csv

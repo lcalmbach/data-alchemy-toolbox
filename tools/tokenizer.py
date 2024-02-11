@@ -50,6 +50,62 @@ class OutputFormat(Enum):
     S3 = 3
 
 
+def calc_token_size(text: str, model_name="gpt-3.5"):
+    """
+    Calculates the number of tokens in a given text.
+
+    Args:
+        text (str): The text to be tokenized.
+        model_name (str, optional): The name of the model to be used for tokenization. Defaults to "gpt-3.5".
+
+    Returns:
+        int: The number of tokens in the text.
+    """
+    encoding = tiktoken.encoding_for_model(model_name)
+    tokens = encoding.encode(text)
+    return len(tokens)
+
+
+def split_text(
+    text: str,
+    system_prompt: str = "",
+    model_name="gpt-3.5",
+    max_tokens_per_chunk: int = 4097,
+    expected_completion_tokens: int = 1000,
+):
+    """
+    Splits a given text into chunks of sentences, where each chunk has a maximum size of chunk_size.
+
+    Args:
+        text (str): The text to be split.
+        chunk_size (int, optional): The maximum size of each chunk. Defaults to 2048.
+
+    Returns:
+        list: A list of chunks, where each chunk is a string of sentences.
+    """
+    chunks = []
+    current_chunk = ""
+    current_token_count = 0
+    system_prompt_tokens = calc_token_size(system_prompt, model_name)
+    max_tokens_per_chunk = (
+        max_tokens_per_chunk - system_prompt_tokens - expected_completion_tokens
+    )
+    for line in text.split("\n"):
+        line_token_count = calc_token_size(line, model_name)
+        if current_token_count + line_token_count > max_tokens_per_chunk:
+            chunks.append(current_chunk)
+            current_chunk = line + "\n"
+            current_token_count = line_token_count
+        else:
+            current_chunk += line + "\n"
+            current_token_count += line_token_count
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    return chunks
+
+
 class Tokenizer(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)

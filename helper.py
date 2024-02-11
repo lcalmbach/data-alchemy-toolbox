@@ -14,6 +14,10 @@ import fitz
 import tiktoken
 import base64
 import requests
+import tiktoken
+from transformers import GPT2Tokenizer
+
+import math
 
 LOCAL_HOST = "liestal"
 LOGFILE = "./data-alchemy-toolbox.log"
@@ -39,6 +43,11 @@ def download_file_button(file_path: str, button_text: str = "Download"):
             key="file_download",
             file_name=file_path,
         )
+
+
+def save_json_object(data, filename):
+    with open(filename, "w") as file:
+        json.dump(data, file, indent=4)
 
 
 def download_button(data, download_filename, button_text):
@@ -229,30 +238,6 @@ def init_logging(name, filename, console_level=logging.DEBUG, file_level=logging
     return logger
 
 
-def split_text(text: str, chunk_size: int = 2048):
-    """
-    Splits a given text into chunks of sentences, where each chunk has a maximum size of chunk_size.
-
-    Args:
-        text (str): The text to be split.
-        chunk_size (int, optional): The maximum size of each chunk. Defaults to 2048.
-
-    Returns:
-        list: A list of chunks, where each chunk is a string of sentences.
-    """
-    chunks = []
-    current_chunk = ""
-    for sentence in text.split("."):
-        if len(current_chunk) + len(sentence) < chunk_size:
-            current_chunk += sentence + "."
-        else:
-            chunks.append(current_chunk.strip())
-            current_chunk = sentence + "."
-    if current_chunk:
-        chunks.append(current_chunk.strip())
-    return chunks
-
-
 def check_file_type(uploaded_file):
     """
     Check the type of the uploaded file based on its content.
@@ -432,6 +417,7 @@ def show_download_button(
         data=text_bytes,
         file_name=download_filename,
         mime="text/plain",
+        key=get_random_word(5),
     )
 
 
@@ -568,6 +554,47 @@ def get_original_url(url: str) -> str:
     except requests.exceptions.RequestException as e:
         logger.error(str(e))
         return None
+
+
+def auto_chunker(document, max_chunk_size, model):
+    # https://vectify.ai/blog/LargeDocumentSummarization
+    # https://github.com/VectifyAI/LargeDocumentSummarization
+    tokenizer = tiktoken.encoding_for_model(model)
+    document_tokens = tokenizer.encode(document)
+    document_size = len(document_tokens)
+    # total chunk number
+    K = math.ceil(document_size / max_chunk_size)
+    # average integer chunk size
+    average_chunk_size = math.ceil(document_size / K)
+    # number of chunks with average_chunk_size - 1
+    shorter_chunk_number = K * average_chunk_size - document_size
+    # number of chunks with average_chunk_size
+    standard_chunk_number = K - shorter_chunk_number
+
+    chunks = []
+    chunk_start = 0
+    for i in range(0, K):
+        if i < standard_chunk_number:
+            chunk_end = chunk_start + average_chunk_size
+        else:
+            chunk_end = chunk_start + average_chunk_size - 1
+        chunk = document_tokens[chunk_start:chunk_end]
+        chunks.append(tokenizer.decode(chunk))
+        chunk_start = chunk_end
+
+    assert chunk_start == document_size
+    return chunks
+
+
+def display_pdf(file):
+    # Opening file from file path
+    with open(file, "rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+    # Embedding PDF in HTML
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>'
+
+    # Displaying File
+    st.markdown(pdf_display, unsafe_allow_html=True)
 
 
 logger = init_logging(__name__, LOGFILE)

@@ -102,7 +102,7 @@ class Moderator(ToolBase):
                 output = self.usage_compliance_check(sentence)
                 flagged = output["results"][0]["flagged"]
                 results.append(flagged)
-                flag = '❌' if flagged else '✅'
+                flag = "❌" if flagged else "✅"
                 with st.expander(f"{sentence}: {flag}"):
                     st.write(output["results"][0])
             st.markdown(f"Gesamtergebnis: {'❌' if any(results) else '✅'}")
