@@ -35,6 +35,6 @@ Eingabeformate
         return wörterbuch[lang][key]
     print(translate("welcome", "de")
     ```
-
+    
 Anwendungsmöglichkeiten
 - Übersetzung von Texten für Codelisten, Programme oder Websites mit Unterstützung spezieller Ausgabeformate wie JSON.
