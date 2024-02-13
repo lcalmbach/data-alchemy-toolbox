@@ -86,7 +86,7 @@ class ToolBase:
             self.tokens_in += tokens[0]
             self.tokens_out += tokens[1]
 
-    def get_completion(self, text, index):
+    def get_completion(self, text: str, index: int = 0):
         """Generates a response using the OpenAI ChatCompletion API based on
         the given text.
 

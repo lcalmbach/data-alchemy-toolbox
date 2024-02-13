@@ -11,7 +11,30 @@ Eingabeformate
     tab; Tabelle
     ```	
     Dabei ist `key` der im Programmcode verwendete Schlüssel, welcher eindeutig sein muss. `value` ist der zu übersetzende Text. Die App fügt eine Spalte "translation" hinzu, in der die Übersetzung eingetragen wird. Der Schlüssel wird für die Übersetzung von Weboberflächen verwendet, beispielsweise wird statt `print("Willkommen")` dann `print(translate("welcome"))` genutzt. Soll lediglich eine Codeliste übersetzt werden, wäre der Schlüssel nicht erforderlich; dennoch muss die Spalte in der Eingabedatei vorhanden sein. In diesem Fall kann eine fortlaufende Nummerierung (1, 2, 3, 4) verwendet werden, wobei auf Eindeutigkeit zu achten ist.
-- **Multilang JSON-Format**: die meisten Internationalisierungs-Bibliotheken nutzen das JSON-Format zur Datenspeicherung. Dieses Format bietet den Vorteil, dass die übersetzten Texte sehr einfach in Programmcode-Wörterbücher integriert werden können.
+- **Multilang JSON-Format**: Die meisten Bibliotheken zur Internationalisierung nutzen das JSON-Format für die Datenspeicherung. Dieses Format hat den Vorteil, dass übersetzte Texte einfach in die Wörterbücher des Programmiercodes integriert werden können. Das von dieser App unterstützte Format ist wie folgt strukturiert:
+    ```json
+    {
+        "source": {
+            "welcome": "Willkommen",
+            "tab": "Tabelle"
+        },
+        "de": {
+            "welcome": "Willkommen",
+            "tab": "Tabelle"
+        },
+        "en": {
+            "welcome": "Welcome",
+            "tab": "Table"
+        }
+    }
+    ```
+    Der Originalinhalt wird im source-Abschnitt gespeichert. Dieser Abschnitt wird direkt von einem Abschnitt mit identischem Inhalt gefolgt, der die Sprachkennung der Zielsprache trägt, im gegebenen Beispiel 'de'. Der source-Abschnitt dient der Erfassung neuer Schlüssel und der Änderung bestehender Texte. Der zweite Abschnitt wird bei jeder Übersetzung mit den Einträgen aus source überschrieben. Fehlende Einträge in der Zielsprache bedeuten, dass der Eintrag neu ist; existiert der Eintrag, aber mit Änderungen, so ist er als geändert gekennzeichnet. Das Übersetzungstool muss daher nur Einträge übersetzen, die seit dem letzten Durchlauf Änderungen erfahren haben. Die übrigen Abschnitte enthalten die Übersetzungen in den jeweiligen Sprachen. Diese Struktur kann in einer Programmiersprache wie folgt genutzt werden:
+    Ein Nutzer wählt die Sprache aus, und das Programm lädt das entsprechende Wörterbuch aus dem JSON-Format. Die Übersetzung erfolgt dann wie folgt:
+    ```python
+    def translate(key, lang):
+        return wörterbuch[lang][key]
+    print(translate("welcome", "de")
+    ```
 
 Anwendungsmöglichkeiten
 - Übersetzung von Texten für Codelisten, Programme oder Websites mit Unterstützung spezieller Ausgabeformate wie JSON.

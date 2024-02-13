@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import iso639
 import os
+import json
 from enum import Enum
 
 from helper import (
@@ -11,10 +12,10 @@ from helper import (
 )
 from tools.tool_base import ToolBase, DEMO_PATH, OUTPUT_PATH
 
-SYSTEM_PROMPT_TEMPLATE = "You are a professional translator translating from {} to {}"
+SYSTEM_PROMPT_TEMPLATE = 'You will translate a user text from {} to {}. Only returned the translated text, nothing else. if the input is a list, format the output as as list as well.'
 USER_PROMPT = "Translate the following text: {}"
 DEMO_FILE = DEMO_PATH + "demo_summary.txt"
-FILE_FORMAT_OPTIONS = ["txt", "pdf"]
+FILE_FORMAT_OPTIONS = ["txt", "pdf", "json"]
 
 
 class InputFormat(Enum):
@@ -45,29 +46,54 @@ class Translation(ToolBase):
         self.intro = self.get_intro()
         self.output = None
         self.separator = ";"
+        self.data = None
 
     @property
     def system_prompt(self):
         return SYSTEM_PROMPT_TEMPLATE.format(
             iso639.to_name(self.lang_source), iso639.to_name(self.lang_target)
         )
+    
+    def parse_json(self):
+        def check_keys():
+            ok = True
+            valid_keys = ['source'] + list(self.language_dict.keys())
+            for key in self.data.keys():
+                ok = key in valid_keys
+                if not ok:
+                    st.warning(f'{key} ist kein erlaubter Sprachecode')
+                    break
+            return ok
+        
+        self.data = json.load(self.input_file)
+        return check_keys()
 
     def show_settings(self):
         self.input_type = st.radio("Input Format", options=self.formats)
         index_source = list(self.language_dict.keys()).index(self.lang_source)
         index_target = list(self.language_dict.keys()).index(self.lang_target)
-        self.lang_source = st.selectbox(
-            label="Übersetze von",
-            options=self.language_dict.keys(),
-            format_func=lambda x: self.language_dict[x],
-            index=index_source,
-        )
-        self.lang_target = st.selectbox(
-            label="Übersetze nach",
-            options=self.language_dict.keys(),
-            format_func=lambda x: self.language_dict[x],
-            index=index_target,
-        )
+        if self.formats.index(self.input_type) != InputFormat.MULTI_LANG_JSON.value:
+            self.lang_source = st.selectbox(
+                label="Übersetze von",
+                options=self.language_dict.keys(),
+                format_func=lambda x: self.language_dict[x],
+                index=index_source,
+            )
+            self.lang_target = st.selectbox(
+                label="Übersetze nach",
+                options=self.language_dict.keys(),
+                format_func=lambda x: self.language_dict[x],
+                index=index_target,
+            )
+        if self.formats.index(self.input_type) in [InputFormat.MULTI_LANG_JSON.value, InputFormat.FILE.value]:
+            self.input_file = st.file_uploader(
+                self.input_type,
+                type=FILE_FORMAT_OPTIONS,
+                help="Lade die Datei hoch, die du übersetzen möchtest.",
+            )
+            if self.input_file is not None:
+                self.text = extract_text_from_uploaded_file(self.input_file)
+
         if self.formats.index(self.input_type) == InputFormat.DEMO.value:
             text = extract_text_from_file(DEMO_FILE)
             self.text = st.text_area(
@@ -76,14 +102,6 @@ class Translation(ToolBase):
                 height=400,
                 help="Geben Sie den Text ein, den Sie übersetzen möchten.",
             )
-        elif self.formats.index(self.input_type) == InputFormat.FILE.value:
-            self.input_file = st.file_uploader(
-                self.input_type,
-                type=FILE_FORMAT_OPTIONS,
-                help="Lade die Datei hoch, die du übersetzen möchtest.",
-            )
-            if self.input_file is not None:
-                self.text = extract_text_from_uploaded_file(self.input_file)
         elif self.formats.index(self.input_type) == InputFormat.URL.value:
             self.input_file = st.text_input(
                 label=self.input_type,
@@ -107,10 +125,17 @@ class Translation(ToolBase):
                 self.data.columns = ["key", "value"]
                 with st.expander("Schlüssel-Wert-Paare"):
                     st.dataframe(self.data)
+        elif self.formats.index(self.input_type) == InputFormat.MULTI_LANG_JSON.value:
+            if self.input_file:
+                if self.parse_json():
+                    with st.expander('Original'):
+                        st.write(self.data['source'])
+                    st.markdown(f'Original Sprache: {list(self.data.keys())[1]}')
+                    st.markdown(f'Zielsprachen: {", ".join(list(self.data.keys())[2:])}')
+                else:
+                    st.warning("Die json Datei hat Fehler, bitte überprüfe das Format")
         else:
             st.warning("Diese Option wird noch nicht unterstützt.")
-        with st.expander("System Prompt"):
-            st.markdown(self.system_prompt)
 
     def get_language_dict(self):
         keys = [lang["iso639_1"] for lang in iso639.data if lang["iso639_1"] != ""]
@@ -127,7 +152,7 @@ class Translation(ToolBase):
         Args:
             placeholder: The placeholder object used for displaying progress.
 
-        Returns:
+        Returns:self.language_dict[lang]
             None
         """
         self.data["translation"] = ""
@@ -150,6 +175,149 @@ class Translation(ToolBase):
             file_name=filename,
         )
 
+    def init_translation(self):
+            """
+            Initializes the translation dictionary as follows:
+            - the translated dict is initialized empty
+            - The source language is copied 1:1 to translated
+            - an empty dictionary is created for each target language
+            Returns:
+                dict: The initialized translation dictionary.
+            """
+            translated = {}
+            self.lang_source = list(self.data.keys())[1]
+            for lang in list(self.data.keys()):
+                if not (lang in ["source", self.lang_source]):
+                    translated[lang] = {}
+                else:
+                    translated[lang] = self.data[lang]
+            return translated
+    
+    def get_changed_items(self):
+        """
+        Retrieves a list of items that have been changed or are new in the translation data.
+        For list, it checks if one item is new or changed in the list and marks it as changed.
+
+        Returns:
+            list: A list of keys representing the changed or new items.
+        """
+        changed_and_new_items = []
+        source_dict = self.data["source"]
+        source_lang_dict = self.data[self.lang_source]
+        for k, v in source_dict.items():
+            if k not in source_lang_dict:
+                changed_and_new_items.append(k)
+            elif type(source_dict[k]) == list:
+                for item in source_dict[k]:
+                    if not item.encode("utf-8") in [
+                        x.encode("utf-8") for x in source_lang_dict[k]
+                    ]:
+                        changed_and_new_items.append(k)
+                        break
+                    elif item.encode("utf-8") != source_lang_dict[k][
+                        source_lang_dict[k].index(item)
+                    ].encode("utf-8"):
+                        changed_and_new_items.append(k)
+                        break
+            elif v.encode("utf-8") != source_lang_dict[k].encode("utf-8"):
+                changed_and_new_items.append(k)
+        return changed_and_new_items
+    
+    def get_items_to_translate(self, lang, changed_items: dict):
+        """
+        Retrieves the items that need to be translated for the specified language.
+
+        Args:
+            lang (str): The language code for which the translation is needed.
+
+        Returns:
+            dict: A dictionary containing the items to be translated.
+        """
+        result = {}
+        source = self.data["source"]
+        target = self.data[lang]
+        in_keys = list(source.keys())
+        out_keys = list(target.keys())
+        for key in in_keys:
+            if type(source[key]) == list:
+                if not key in out_keys or key in changed_items:
+                    result[key] = source[key]
+                elif target[key] == []:
+                    result[key] = source[key]
+            else:
+                # item has not been created yet
+                if not key in out_keys or key in changed_items:
+                    result[key] = source[key]
+                elif target[key] == "":
+                    result[key] = source[key]
+        return result
+
+    def parse_gpt_output(self, translated_dict: dict, lang: str):
+        """_summary_
+
+        Args:
+            translated_dict (dict): dict with translations: only expressions
+                                    marked in the source file to be translated are
+                                    included.
+
+        Returns:
+            _type_: _description_
+        """
+        result = {}
+        for key in list(self.data["source"].keys()):
+            # if key has been translated, use it as previously translated
+            if type(self.data["source"][key]) == list:
+                if key in translated_dict.keys():
+                    result[key] = translated_dict[key]
+                else:
+                    result[key] = self.data[lang][key]
+            else:
+                if key in translated_dict.keys():
+                    result[key] = translated_dict[key]
+                else:
+                    result[key] = self.data[lang][key]
+        return result
+    
+    def translate_json_file(self):
+        """
+        Uses OpenAI-API to automatically translate texts from one language to another.
+
+        Returns a dictionary with the translated texts. Note that this method requires the
+        OPENAI_API_KEY environment variable to be set with a valid API key for OpenAI's GPT-3 service.
+
+        By default, this method translates texts to English (the 'en' language code). To change the
+        target language, modify the `self.data` attribute before calling this method.
+
+        This method generates a prompt message and submits it to the GPT-3 API. The prompt message
+        includes the contents of `self.data`, which contains a list of texts to translate.
+
+        The API response is parsed to obtain the translated texts, which are returned as a
+        dictionary with the original texts as keys and the translated texts as values.
+
+        Example usage:
+        >> translator = MyTranslator()
+        >> result = translator.translate()
+        >> # result will be a dictionary with the translated texts
+        """
+
+        translated = self.init_translation()
+        changed_items = self.get_changed_items()
+        for lang in list(self.data.keys())[1:]:
+            if lang != self.lang_source:
+                items_to_translate = self.get_items_to_translate(lang, changed_items)
+                self.lang_target = self.language_dict[lang]
+                for key, value in items_to_translate.items():
+                    text = json.dumps(value)
+                    response, tokens = self.get_completion(text, index=0)
+                    self.add_tokens(tokens)
+                    try:
+                        translated[lang][key] = json.loads(response)
+                    except json.JSONDecodeError:
+                        translated[lang][key] = response
+                translated[lang] = self.parse_gpt_output(translated[lang], lang)
+        translated[self.lang_source] = self.data["source"]
+        return translated
+    
     def run(self):
         if st.button("Übersetzung"):
             with st.spinner("Übersetzung läuft..."):
@@ -168,9 +336,16 @@ class Translation(ToolBase):
                     == InputFormat.KEY_VALUE_PAIRS.value
                 ):
                     self.run_csv_translation(placeholder)
+                elif self.formats.index(self.input_type) == InputFormat.MULTI_LANG_JSON.value:
+                    self.output = self.translate_json_file()
                 else:
                     st.warning("Diese Option wird noch nicht unterstützt.")
 
-        if (self.input_type == self.formats[0]) & (self.output is not None):
-            st.markdown("**Übersetzung**")
-            st.markdown(self.output)
+        if self.output is not None:
+            with st.expander("Übersetzung", expanded=True):
+                if self.formats.index(self.input_type) == InputFormat.MULTI_LANG_JSON.value:
+                    st.write(self.output)
+                    st.download_button('Herunterladen', json.dumps(self.output), 'translation.json', 'json')
+                else:
+                    st.markdown("**Übersetzung**")
+                    st.markdown(self.output)
