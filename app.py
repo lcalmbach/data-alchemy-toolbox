@@ -40,7 +40,7 @@ menu_dic = {
     "PDF-Chatbot": pdfchat.PdfChat,
     "Tokenizer": tokenizer.Tokenizer,
     "Finder": finder.Finder,
-    "Unangemessene Inhalte": moderator.Moderator,
+    "Moderator": moderator.Moderator,
     "Text zu Audio": text2speech.Text2Speech,
     "Bildgenerator": imagegen.ImageGenerator,
     "Texterkennung": ocr.Ocr,

@@ -28,13 +28,14 @@ Eingabeformate
         }
     }
     ```
-    Der Originalinhalt wird im source-Abschnitt gespeichert. Dieser Abschnitt wird direkt von einem Abschnitt mit identischem Inhalt gefolgt, der die Sprachkennung der Zielsprache trägt, im gegebenen Beispiel 'de'. Der source-Abschnitt dient der Erfassung neuer Schlüssel und der Änderung bestehender Texte. Der zweite Abschnitt wird bei jeder Übersetzung mit den Einträgen aus source überschrieben. Fehlende Einträge in der Zielsprache bedeuten, dass der Eintrag neu ist; existiert der Eintrag, aber mit Änderungen, so ist er als geändert gekennzeichnet. Das Übersetzungstool muss daher nur Einträge übersetzen, die seit dem letzten Durchlauf Änderungen erfahren haben. Die übrigen Abschnitte enthalten die Übersetzungen in den jeweiligen Sprachen. Diese Struktur kann in einer Programmiersprache wie folgt genutzt werden:
+    Der Originalinhalt wird im source-Abschnitt gespeichert. Dieser Abschnitt wird direkt von einem Abschnitt mit identischem Inhalt gefolgt, der die Sprachkennung der Zielsprache trägt, im gegebenen Beispiel 'de'. Der source-Abschnitt dient der Erfassung neuer Schlüssel und der Änderung bestehender Texte. Pro Eintrag wird ein Schlüssel und ein entsprechender Wert in json Konvention definiert. Als Werte können auch Listen definiert werden. Der zweite Abschnitt wird bei jeder Übersetzung mit den Einträgen aus source überschrieben. Fehlende Einträge in der Zielsprache bedeuten, dass der Eintrag neu ist; existiert der Eintrag, aber mit Änderungen, so ist er als geändert gekennzeichnet. Das Übersetzungstool muss daher nur Einträge übersetzen, die seit dem letzten Durchlauf Änderungen erfahren haben. Die übrigen Abschnitte enthalten die Übersetzungen in den jeweiligen Sprachen. Diese Struktur kann in einer Programmiersprache wie folgt genutzt werden:
     Ein Nutzer wählt die Sprache aus, und das Programm lädt das entsprechende Wörterbuch aus dem JSON-Format. Die Übersetzung erfolgt dann wie folgt:
     ```python
     def translate(key, lang):
         return wörterbuch[lang][key]
     print(translate("welcome", "de")
     ```
-    
+    Die Einträge in den Zielsprachen können überarbeitet werden, sie werden nicht neu übersetzt, solange die Werte der entsprechenden source und Quellsprache, in diesem Beispiel Einträge in den Abschnitten source und de, nicht geändert werden.
+
 Anwendungsmöglichkeiten
 - Übersetzung von Texten für Codelisten, Programme oder Websites mit Unterstützung spezieller Ausgabeformate wie JSON.

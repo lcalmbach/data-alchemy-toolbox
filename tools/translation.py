@@ -12,10 +12,10 @@ from helper import (
 )
 from tools.tool_base import ToolBase, DEMO_PATH, OUTPUT_PATH
 
-SYSTEM_PROMPT_TEMPLATE = 'You will translate a user text from {} to {}. Only returned the translated text, nothing else. if the input is a list, format the output as as list as well.'
-USER_PROMPT = "Translate the following text: {}"
-DEMO_FILE = DEMO_PATH + "demo_summary.txt"
-FILE_FORMAT_OPTIONS = ["txt", "pdf", "json"]
+SYSTEM_PROMPT_TEMPLATE = 'You will translate a user text from {} to {}. Only return the translated text, nothing else. If the input is a list, format the output as as list as well.'
+USER_PROMPT = 'Translate the following text: {}'
+DEMO_FILE = DEMO_PATH + 'demo_summary.txt'
+FILE_FORMAT_OPTIONS = ['txt', 'pdf', 'json']
 
 
 class InputFormat(Enum):
@@ -29,29 +29,32 @@ class InputFormat(Enum):
 class Translation(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
-        self.title = "Übersetzung"
-        self.lang_source = "de"
-        self.lang_target = "en"
+        self.title = 'Übersetzung'
+        self.lang_source = 'de'
+        self.lang_target = 'en'
         self.texts_df = pd.DataFrame()
         self.language_dict = self.get_language_dict()
         self.formats = [
-            "Demo",
-            "Text oder PDF Datei hochladen",
-            "URL von Text oder PDF Datei",
-            "Schlüssel-Wert-Paare in einer CSV-Datei",
-            "JSON-Datei (Multi-lang-Format)",
+            'Demo',
+            'Text oder PDF Datei hochladen',
+            'URL von Text oder PDF Datei',
+            'Schlüssel-Wert-Paare in einer CSV-Datei',
+            'JSON-Datei (Multi-lang-Format)',
         ]
         self.input_type = self.formats[0]
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
         self.output = None
-        self.separator = ";"
+        self.separator = ';'
         self.data = None
+        self.system_prompt = None
 
-    @property
-    def system_prompt(self):
-        return SYSTEM_PROMPT_TEMPLATE.format(
-            iso639.to_name(self.lang_source), iso639.to_name(self.lang_target)
+    def set_system_prompt(self, lang_source: str = None, lang_target: str = None):
+        if lang_source is None:
+            lang_source = self.lang_source
+            lang_target = self.lang_target
+        self.system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+            iso639.to_name(lang_source), iso639.to_name(lang_target)
         )
     
     def parse_json(self):
@@ -69,18 +72,18 @@ class Translation(ToolBase):
         return check_keys()
 
     def show_settings(self):
-        self.input_type = st.radio("Input Format", options=self.formats)
+        self.input_type = st.radio('Input Format', options=self.formats)
         index_source = list(self.language_dict.keys()).index(self.lang_source)
         index_target = list(self.language_dict.keys()).index(self.lang_target)
         if self.formats.index(self.input_type) != InputFormat.MULTI_LANG_JSON.value:
             self.lang_source = st.selectbox(
-                label="Übersetze von",
+                label='Übersetze von',
                 options=self.language_dict.keys(),
                 format_func=lambda x: self.language_dict[x],
                 index=index_source,
             )
             self.lang_target = st.selectbox(
-                label="Übersetze nach",
+                label='Übersetze nach',
                 options=self.language_dict.keys(),
                 format_func=lambda x: self.language_dict[x],
                 index=index_target,
@@ -89,7 +92,7 @@ class Translation(ToolBase):
             self.input_file = st.file_uploader(
                 self.input_type,
                 type=FILE_FORMAT_OPTIONS,
-                help="Lade die Datei hoch, die du übersetzen möchtest.",
+                help='Lade die Datei hoch, die du übersetzen möchtest.',
             )
             if self.input_file is not None:
                 self.text = extract_text_from_uploaded_file(self.input_file)
@@ -97,41 +100,41 @@ class Translation(ToolBase):
         if self.formats.index(self.input_type) == InputFormat.DEMO.value:
             text = extract_text_from_file(DEMO_FILE)
             self.text = st.text_area(
-                label="Text",
+                label='Text',
                 value=text,
                 height=400,
-                help="Geben Sie den Text ein, den Sie übersetzen möchten.",
+                help='Geben Sie den Text ein, den Sie übersetzen möchten.',
             )
         elif self.formats.index(self.input_type) == InputFormat.URL.value:
             self.input_file = st.text_input(
                 label=self.input_type,
-                help="Gib bitte die URL der Datei ein, den du übersetzen möchtest.",
+                help='Gib bitte die URL der Datei ein, den du übersetzen möchtest.',
             )
             if self.input_file is not None:
                 self.text = extract_text_from_url(self.input_file)
         elif self.formats.index(self.input_type) == InputFormat.KEY_VALUE_PAIRS.value:
             self.separator = st.selectbox(
-                label="Trennzeichen",
-                options=[";", ",", "|", "\t"],
-                help="Gib bitte das Trennzeichen ein, das du in der hochgeladenen Datei verwendest.",
+                label='Trennzeichen',
+                options=[';', ',', '|', '\t'],
+                help='Gib bitte das Trennzeichen ein, das du in der hochgeladenen Datei verwendest.',
             )
             self.input_file = st.file_uploader(
                 self.input_type,
-                type=["csv"],
-                help="Lade die Datei hoch, die du übersetzen möchtest.",
+                type=['csv'],
+                help='Lade die Datei hoch, die du übersetzen möchtest.',
             )
             if self.input_file is not None:
                 self.data = pd.read_csv(self.input_file, sep=self.separator)
-                self.data.columns = ["key", "value"]
-                with st.expander("Schlüssel-Wert-Paare"):
+                self.data.columns = ['key', 'value']
+                with st.expander('Schlüssel-Wert-Paare'):
                     st.dataframe(self.data)
         elif self.formats.index(self.input_type) == InputFormat.MULTI_LANG_JSON.value:
             if self.input_file:
                 if self.parse_json():
                     with st.expander('Original'):
                         st.write(self.data['source'])
-                    st.markdown(f'Original Sprache: {list(self.data.keys())[1]}')
-                    st.markdown(f'Zielsprachen: {", ".join(list(self.data.keys())[2:])}')
+                    st.markdown(f'Übersetze von: {list(self.data.keys())[1]}')
+                    st.markdown(f'Übersetze nach: {", ".join(list(self.data.keys())[2:])}')
                 else:
                     st.warning("Die json Datei hat Fehler, bitte überprüfe das Format")
         else:
@@ -278,7 +281,7 @@ class Translation(ToolBase):
                     result[key] = self.data[lang][key]
         return result
     
-    def translate_json_file(self):
+    def translate_json_file(self, progress):
         """
         Uses OpenAI-API to automatically translate texts from one language to another.
 
@@ -302,50 +305,59 @@ class Translation(ToolBase):
 
         translated = self.init_translation()
         changed_items = self.get_changed_items()
-        for lang in list(self.data.keys())[1:]:
-            if lang != self.lang_source:
-                items_to_translate = self.get_items_to_translate(lang, changed_items)
-                self.lang_target = self.language_dict[lang]
-                for key, value in items_to_translate.items():
-                    text = json.dumps(value)
-                    response, tokens = self.get_completion(text, index=0)
-                    self.add_tokens(tokens)
-                    try:
-                        translated[lang][key] = json.loads(response)
-                    except json.JSONDecodeError:
-                        translated[lang][key] = response
-                translated[lang] = self.parse_gpt_output(translated[lang], lang)
-        translated[self.lang_source] = self.data["source"]
+        st.markdown(f'{len(changed_items)} neue oder geänderte Ausdrücke gefunden.')
+        #languages start with 3 item: 0: source: 1: source lang diff, 2: first lang
+        cnt = 0
+        target_lang_list = list(self.data.keys())[2:]
+        total = len(changed_items) * len(target_lang_list)
+        for lang in target_lang_list:
+            items_to_translate = self.get_items_to_translate(lang, changed_items)
+            language = self.language_dict[lang]
+            self.set_system_prompt(self.lang_source, lang)
+            for key, value in items_to_translate.items():
+                text = json.dumps(value)
+                response, tokens = self.get_completion(text, index=0)
+                self.add_tokens(tokens)
+                try:
+                    translated[lang][key] = json.loads(response)
+                except json.JSONDecodeError:
+                    translated[lang][key] = response
+                cnt += 1
+                progress.progress(cnt / total, f'Übersetze nach {language} ({cnt}/{total}): {value}')
+            translated[lang] = self.parse_gpt_output(translated[lang], lang)
+        progress.progress(1.0, f'Übersetzung abgeschlossen ({cnt}/{total})')
+            
+
+        # synch source long with source so there are no differences after the translation
+        translated[self.lang_source] = self.data['source']
         return translated
     
     def run(self):
-        if st.button("Übersetzung"):
-            with st.spinner("Übersetzung läuft..."):
-                placeholder = st.empty()
-                if self.formats.index(self.input_type) in [
-                    InputFormat.DEMO.value,
-                    InputFormat.FILE.value,
-                    InputFormat.URL.value,
-                ]:
-                    prompt = USER_PROMPT.format(self.text)
-                    self.output, tokens = self.get_completion(text=prompt, index=0)
-                    self.tokens_in, self.tokens_out = tokens[0], tokens[1]
-                    st.markdown(self.token_use_expression())
-                elif (
-                    self.formats.index(self.input_type)
-                    == InputFormat.KEY_VALUE_PAIRS.value
-                ):
-                    self.run_csv_translation(placeholder)
-                elif self.formats.index(self.input_type) == InputFormat.MULTI_LANG_JSON.value:
-                    self.output = self.translate_json_file()
-                else:
-                    st.warning("Diese Option wird noch nicht unterstützt.")
+        if st.button('Übersetzung'):
+            placeholder = st.empty()
+            progress = st.progress(0, text='Übersetzung läuft')
+            if self.formats.index(self.input_type) in [
+                InputFormat.DEMO.value,
+                InputFormat.FILE.value,
+                InputFormat.URL.value,
+            ]:
+                self.set_system_prompt(self.lang_source, self.lang_target)
+                prompt = USER_PROMPT.format(self.text)
+                self.output, tokens = self.get_completion(text=prompt, index=0)
+                self.tokens_in, self.tokens_out = tokens[0], tokens[1]
+                st.markdown(self.token_use_expression())
+            elif (
+                self.formats.index(self.input_type)
+                == InputFormat.KEY_VALUE_PAIRS.value
+            ):
+                self.set_system_prompt(self.lang_source, self.lang_target)
+                self.run_csv_translation(placeholder)
+            elif self.formats.index(self.input_type) == InputFormat.MULTI_LANG_JSON.value:
+                self.output = self.translate_json_file(progress)
+            else:
+                st.warning('Diese Option wird noch nicht unterstützt.')
 
         if self.output is not None:
-            with st.expander("Übersetzung", expanded=True):
-                if self.formats.index(self.input_type) == InputFormat.MULTI_LANG_JSON.value:
-                    st.write(self.output)
-                    st.download_button('Herunterladen', json.dumps(self.output), 'translation.json', 'json')
-                else:
-                    st.markdown("**Übersetzung**")
-                    st.markdown(self.output)
+            with st.expander('Übersetzung', expanded=True):
+                st.write(self.output)
+            st.download_button('Herunterladen', json.dumps(self.output), 'translation.json', 'json')
