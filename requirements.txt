@@ -1,8 +1,8 @@
-streamlit==1.28.1
+streamlit==1.32.0
 streamlit_lottie==0.0.5
 streamlit_option_menu==0.3.6
 streamlit_chat==0.1.1
-openai==1.2.3
+openai==1.13.3
 iso639==0.1.4
 Flair==0.13.1
 presidio_analyzer==2.2.351
@@ -10,10 +10,11 @@ presidio_anonymizer==2.2.351
 pymupdf==1.23.5
 pyperclip==1.8.2
 moviepy==1.0.3
-langchain
+langchain==0.1.11
+langchain-community==0.0.27
 tiktoken==0.3.3
 boto3==1.33.9
 nltk==3.8.1
-faiss-cpu==1.7.4
 whoosh==2.7.4
 openpyxl==3.1.2
+FAISS==1.5.3

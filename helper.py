@@ -456,15 +456,16 @@ def save_uploaded_image(uploaded_file, path: str):
 
 
 def save_uploadedfile(uploadedfile, path: str):
-    ok, err_msg = True, ""
+    ok, err_msg, file_path = True, "", ""
     try:
-        with open(os.path.join(path, uploadedfile.name), "wb") as f:
+        file_path = os.path.join(path, uploadedfile.name)
+        with open(file_path, "wb") as f:
             f.write(uploadedfile.getbuffer())
     except Exception as e:
         ok = False
         err_msg = str(e)
         logger.error(err_msg)
-    return ok, err_msg
+    return file_path, ok, err_msg
 
 
 def encode_image(image_path: str):

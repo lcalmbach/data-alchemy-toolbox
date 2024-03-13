@@ -1,4 +1,4 @@
-env
+.venv
 work
 ./__pycache__
 ./tools/__pycache__
