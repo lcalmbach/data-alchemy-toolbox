@@ -1,8 +1,7 @@
 # https://blog.nextideatech.com/chat-with-documents-using-langchain-gpt-4-python/
 # https://github.com/shahidul034/Chat-with-pdf-using-LLM-langchain-and-streamlit
 import os
-import random
-import itertools
+import pyperclip
 import streamlit as st
 import pandas as pd
 from langchain.vectorstores import FAISS
@@ -179,8 +178,5 @@ class PdfChat(ToolBase):
         if self.response is not None:
             with st.expander(f'🤖 {self.model}', expanded=True):
                 st.markdown(self.response)
-                show_download_button(
-                        text_data=self.response,
-                        download_filename="qa_response.txt",
-                        button_text="Datei Herunterladen",
-                )
+                if st.button("Text in Zwischenablage kopieren"):
+                    pyperclip.copy(self.response)
