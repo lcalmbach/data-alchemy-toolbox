@@ -178,5 +178,5 @@ class PdfChat(ToolBase):
         if self.response is not None:
             with st.expander(f'🤖 {self.model}', expanded=True):
                 st.markdown(self.response)
-                if st.button("Text in Zwischenablage kopieren"):
-                    pyperclip.copy(self.response)
+            if st.button("Text in Zwischenablage kopieren"):
+                pyperclip.copy(self.response)
