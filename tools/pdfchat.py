@@ -171,7 +171,7 @@ class PdfChat(ToolBase):
                 height=400,
             )
         self.user_prompt = f'Antworte auf deutsch: ***{prompt}***'
-        ok = self.user_prompt > ''
+        ok = (self.user_prompt) > '' and (self.qa is not None)
         if st.button("📨 Abschicken", disabled=(ok is False)):
             self.response = self.qa.run(self.user_prompt)
 

@@ -382,14 +382,12 @@ def extract_text_from_uploaded_file(uploaded_file: io.BytesIO) -> str:
             for page in doc:
                 text += page.get_text()
             return text
-
     elif uploaded_file.type in ["text/plain", "text/csv"]:
         # Process text file
         # Assuming the text file is encoded in 'utf-8'
         stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
         text = stringio.read()
         return text
-
     else:
         return "Unsupported file type"
 

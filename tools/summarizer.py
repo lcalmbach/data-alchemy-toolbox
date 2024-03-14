@@ -1,11 +1,11 @@
+# resource: https://www.assemblyai.com/blog/text-summarization-nlp-5-best-apis/
+
 import streamlit as st
 import pandas as pd
 import zipfile
 import os
 from enum import Enum
-import boto3
 import json
-from io import BytesIO
 from helper import (
     init_logging,
     check_file_type,
@@ -20,7 +20,7 @@ from helper import (
     extract_text_from_file,
     save_json_object,
 )
-from tools.tokenizer import split_text, calc_token_size
+from tools.tokenizer import split_text
 from tools.tool_base import ToolBase, MODEL_OPTIONS, LOGFILE, OUTPUT_PATH
 
 logger = init_logging(__name__, LOGFILE)
@@ -29,7 +29,7 @@ DEMO_FILES = "./data/demo/summary_folder/"
 SYSTEM_PROMPT_TEMPLATE = "You will be provided with a text. Your task is to summarize the text in German. The summary should contain a maximum of {}. Focus on the main results."
 LIMIT_OPTIONS = ["Zeichen", "Tokens", "Sätze"]
 FILE_FORMAT_OPTIONS = ["pdf", "txt"]
-INPUT_FORMAT_OPTIONS = ["Demo", "Datei Hochladen", "ZIP hochladen", "S3-Bucket"]
+INPUT_FORMAT_OPTIONS = ["Demo", "Datei Hochladen", "ZIP Datei hochladen"]
 
 
 class limitType(Enum):
@@ -42,14 +42,12 @@ class InputFormat(Enum):
     DEMO = 0
     FILE = 1
     ZIPPED_FILE = 2
-    S3 = 3
 
 
 class OutputFormat(Enum):
     DEMO = 0
     CSV = 1
     ZIP = 2
-    S3 = 3
 
 
 class Summary(ToolBase):
@@ -66,7 +64,6 @@ class Summary(ToolBase):
         self.input_files = []
         self.output_file = None
         self.results = []
-        self.bucket_name = "data-alchemy-bucket-01"
         self.input_prefix = "input/"
         self.output_prefix = "output/"
         self.text = ""
@@ -144,12 +141,6 @@ class Summary(ToolBase):
                 self.output_file = OUTPUT_PATH + self.input_file.name.replace(
                     ".zip", "_output.zip"
                 )
-        elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value:
-            self.s3_input_bucket = st.text_input(
-                "S3-Bucket",
-                value=self.bucket_name,
-                help="Gib die ARN des S3-Buckets ein, der die Dateien enthält, die du zusammenfassen möchten. Beachte, dass die Applikation Leserecht auf dem bucket haben muss oder dass der Bucket öffentlich zugänglich ist.",
-            )
 
     def extract_title(self, text: str):
         prompt = f"Extract the title for the following text:\n\n{text}"
@@ -209,7 +200,11 @@ class Summary(ToolBase):
             return text, tokens
 
         self.display_selected_model()
-        st.markdown(f"{len(self.input_files)} Dateien werden zusammengefasst.")
+        if (
+            INPUT_FORMAT_OPTIONS.index(self.input_format)
+            == InputFormat.DEMO.value
+        ):
+            st.markdown(f"{len(self.input_files)} Dateien werden zusammengefasst.")
         if st.button("Zusammenfassung"):
             self.results = []
             with st.spinner("Generiere Zusammenfassung..."):
@@ -234,10 +229,12 @@ class Summary(ToolBase):
                     == InputFormat.FILE.value
                 ):
                     if self.input_file:
-                        if check_file_type(self.input_file) == "pdf":
+                        if check_file_type(self.input_file).lower() == "pdf":
                             text = extract_text_from_uploaded_file(self.input_file)
-                            generate_summary(text, placeholder)
-                            show_summary_text_field()
+                            title, tokens = self.extract_title(text[:500])
+                            summary, tokens = generate_summary(text, self.input_file.name, placeholder)
+                            result = {'title': title, 'summary': summary, 'tokens_in': tokens[0], 'tokens_out': tokens[1]}
+                            self.results.append(result)
                 elif (
                     INPUT_FORMAT_OPTIONS.index(self.input_format)
                     == InputFormat.ZIPPED_FILE.value
@@ -283,66 +280,6 @@ class Summary(ToolBase):
                             zip_texts(summaries, file_names, self.output_file)
                     if self.output_file:
                         download_file_button(self.output_file, "Datei herunterladen")
-
-                elif (
-                    INPUT_FORMAT_OPTIONS.index(self.input_format)
-                    == InputFormat.S3.value
-                ) and (self.s3_input_bucket > ""):
-                    s3_client = boto3.client(
-                        "s3",
-                        aws_access_key_id=get_var("aws_access_key_id"),
-                        aws_secret_access_key=get_var("aws_secret_access_key"),
-                        region_name=get_var("aws_region"),
-                    )
-                    response = s3_client.list_objects_v2(
-                        Bucket=self.bucket_name, Prefix=self.input_prefix
-                    )
-                    if "Contents" in response:
-                        for item in response["Contents"]:
-                            file_key = item["Key"]
-                            # skip folders
-                            if file_key.endswith("/"):
-                                continue
-                            try:
-                                file_obj = s3_client.get_object(
-                                    Bucket=self.bucket_name, Key=file_key
-                                )
-                                text = ""
-                                output_file_key = file_key.replace(
-                                    self.input_prefix, self.output_prefix
-                                )
-                                if file_key.endswith(".txt"):
-                                    text = file_obj["Body"].read().decode("utf-8")
-                                elif file_key.endswith(".pdf"):
-                                    pdf_stream = BytesIO(file_obj["Body"].read())
-                                    text = extract_text_from_uploaded_file(
-                                        pdf_stream, placeholder
-                                    )
-                                    output_file_key = output_file_key.replace(
-                                        ".pdf", ".txt"
-                                    )
-                                if text > "":
-                                    token_number = get_token_size(text)
-                                    logger.info(
-                                        f"Summarizing {file_key} ({token_number} tokens)"
-                                    )
-                                    generate_summary(text, placeholder)
-                                    s3_client.put_object(
-                                        Bucket=self.bucket_name,
-                                        Key=output_file_key,
-                                        Body=self.output,
-                                    )
-                                else:
-                                    st.warning(
-                                        f"Die Datei {file.filename} hat nicht das richtige Format, ist leer oder konnte nicht gelesen werden."
-                                    )
-                            except Exception as e:
-                                st.warning(str(e))
-                        st.success(
-                            f"Alle Dateien wurden zusammengefasst und im Bucket {self.bucket_name}{self.output_prefix} abgelegt."
-                        )
-                    else:
-                        st.write("No files in the bucket.")
                
                 if len(self.results) > 0:
                     st.markdown('---')
