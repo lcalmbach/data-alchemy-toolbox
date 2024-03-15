@@ -4,7 +4,7 @@ import pandas as pd
 import tiktoken
 import nltk
 import zipfile
-from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.tokenize import sent_tokenize
 from helper import init_logging, extract_text_from_uploaded_file, get_text_from_binary
 from enum import Enum
 
@@ -26,7 +26,6 @@ INPUT_FORMAT_OPTIONS = [
     "Demo",
     "Eine Datei (txt, pdf)",
     "Mehrere Dateien gezippt",
-    "S3-Bucket",
 ]
 
 
@@ -40,17 +39,15 @@ class InputFormat(Enum):
     DEMO = 0
     FILE = 1
     ZIPPED_FILE = 2
-    S3 = 3
 
 
 class OutputFormat(Enum):
     DEMO = 0
     CSV = 1
     ZIP = 2
-    S3 = 3
 
 
-def calc_token_size(text: str, model_name="gpt-3.5"):
+def calc_tokens(text: str, model_name="gpt-3.5"):
     """
     Calculates the number of tokens in a given text.
 
@@ -63,7 +60,7 @@ def calc_token_size(text: str, model_name="gpt-3.5"):
     """
     encoding = tiktoken.encoding_for_model(model_name)
     tokens = encoding.encode(text)
-    return len(tokens)
+    return tokens
 
 
 def split_text(
@@ -86,12 +83,12 @@ def split_text(
     chunks = []
     current_chunk = ""
     current_token_count = 0
-    system_prompt_tokens = calc_token_size(system_prompt, model_name)
+    system_prompt_tokens = len(calc_tokens(system_prompt, model_name))
     max_tokens_per_chunk = (
         max_tokens_per_chunk - system_prompt_tokens - expected_completion_tokens
     )
     for line in text.split("\n"):
-        line_token_count = calc_token_size(line, model_name)
+        line_token_count = len(calc_tokens(line, model_name))
         if current_token_count + line_token_count > max_tokens_per_chunk:
             chunks.append(current_chunk)
             current_chunk = line + "\n"
@@ -117,10 +114,12 @@ class Tokenizer(ToolBase):
         self.model = MODEL_OPTIONS[1]
         self.input_file = None
         self.output_file = None
-        self.s3_input_bucket = ""
         self.html = None
-        with open(DEMO_FILE, "r", encoding="utf8") as file:
-            self.text = file.read()
+        self.text = self.read_file(DEMO_FILE)
+
+    def read_file(self, filename):
+        with open(filename, "r", encoding="utf8") as file:
+            return file.read()
 
     def show_settings(self):
         """
@@ -138,16 +137,16 @@ class Tokenizer(ToolBase):
         )
         if INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.DEMO.value:
             self.text = st.text_area(
-                "Demo Text für die Zusammenfassung",
+                "Demo Text für den Tokenizer",
                 value=self.text,
                 height=400,
-                help="Geben Sie den Text ein, den Sie zusammenfassen möchten.",
+                help="Geben Sie den Text ein, für den die Token berechnet werden sollen.",
             )
         elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.FILE.value:
             self.input_file = st.file_uploader(
                 "PDF oder Text Datei",
                 type=["pdf", "txt"],
-                help="Laden Sie die Datei hoch, die Sie zusammenfassen möchten.",
+                help="Laden Sie die Datei hoch, für die du Tokens berechnen möchtest.",
             )
         elif (
             INPUT_FORMAT_OPTIONS.index(self.input_format)
@@ -156,13 +155,7 @@ class Tokenizer(ToolBase):
             self.input_file = st.file_uploader(
                 "ZIP Datei",
                 type=["zip"],
-                help="Laden Sie die ZIP Datei hoch mit Dateien, die Sie zusammenfassen möchten. Die Datei muss Dateien im Format zip, txt und pdf enthalten.",
-            )
-        elif INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value:
-            self.s3_input_bucket = st.text_input(
-                "S3-Bucket",
-                value=self.s3_input_bucket,
-                help="Geben Sie die ARN des S3-Buckets ein, der die Dateien enthält, die Sie zusammenfassen möchten.",
+                help="Lade die ZIP Datei hoch mit Dateien, für die du tokens berechnen möchten. Die Datei muss Dateien im Format zip, txt und pdf enthalten.",
             )
 
     def analyse_text(self):
@@ -244,10 +237,7 @@ class Tokenizer(ToolBase):
                                 f"Die Datei {file.filename} hat nicht das richtige Format und ist leer oder konnte nicht gelesen werden."
                             )
                 st.success("Alle Dateien in wurden analysiert.")
-            elif (
-                INPUT_FORMAT_OPTIONS.index(self.input_format) == InputFormat.S3.value
-            ) and (self.s3_input_bucket > ""):
-                pass
+            
         if self.html is not None and INPUT_FORMAT_OPTIONS.index(self.input_format) in (
             0,
             1,

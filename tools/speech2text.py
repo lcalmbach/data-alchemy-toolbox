@@ -1,3 +1,5 @@
+# https://github.com/stefanrmmr/streamlit-audio-recorder/tree/main
+
 import streamlit as st
 import os
 from moviepy.editor import VideoFileClip
@@ -8,6 +10,7 @@ import zipfile
 
 from helper import get_var, save_uploadedfile
 from tools.tool_base import ToolBase, TEMP_PATH, OUTPUT_PATH, DEMO_PATH
+from st_audiorec import st_audiorec
 
 DEMO_FILE = DEMO_PATH + "demo_audio.mp3"
 TEMP_FILE = TEMP_PATH + "temp_audio."
@@ -18,15 +21,26 @@ FILE_FORMAT_OPTIONS = ["mp4", "mp3"]
 class InputFormat(Enum):
     DEMO = 0
     FILE = 1
-    ZIPPED_FILE = 2
-    S3 = 3
+    RECORD = 2
+
+def save_wav_audio_data(wav_audio_data, file_name):
+    """
+    Save WAV audio data to a file.
+
+    Parameters:
+    - wav_audio_data: Bytes-like object containing the WAV audio data.
+    - file_name: String with the desired file name for the saved audio.
+    """
+    # Open a file in binary write mode
+    with open(file_name, 'wb') as audio_file:
+        audio_file.write(wav_audio_data)
 
 
 class Speech2Text(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
         self.title = "Audio zu Text"
-        self.formats = ["Demo", "Audio/Video Datei", "Sammlung von Audio-Dateien (zip)"]
+        self.formats = ["Demo", "Audio/Video Datei", "Audio aufnehmen"]
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
         self.input_file = None
@@ -60,12 +74,8 @@ class Speech2Text(ToolBase):
                 if ok:
                     self.output_file = file
                     st.audio(self.output_file)
-        elif self.formats.index(self.input_type) == InputFormat.ZIPPED_FILE.value:
-            self.input_file = st.file_uploader(
-                "ZIP Datei mit gezippten MP4 oder MP3 Dateien hochladen",
-                type=["zip"],
-                help="Lade die ZIP Datei hoch, welche die zu transkribierenden Dateien enthält. Achtung, die Datei darf nicht grösser als 200 MB sein.",
-            )
+        elif self.formats.index(self.input_type) == InputFormat.RECORD.value:
+            self.wav_audio_data = st_audiorec()
 
     def extract_audio_from_video(self, video_file: str) -> str:
         audio_file_name = video_file.replace(".mp4", ".mp3")
@@ -74,47 +84,50 @@ class Speech2Text(ToolBase):
         audio.write_audiofile(audio_file_name)
         return audio_file_name
 
-    def transcribe(self, filename: str) -> str:
+    def file2audio(self, filename: str) -> bytes:
         if filename.endswith(".mp4"):
             audio_file_name = self.extract_audio_from_video(filename)
         else:
             audio_file_name = filename
+        return open(audio_file_name, "rb")
+    
+    def get_formatted_binary(self, wav_audio_data):
+        """
+        Save WAV audio data to a file.
 
-        audio_file = open(audio_file_name, "rb")
+        Parameters:
+        - wav_audio_data: Bytes-like object containing the WAV audio data.
+        - file_name: String with the desired file name for the saved audio.
+        """
+        # Open a file in binary write mode
+        dummy_file = './dummy.wav'
+        with open('./dummy.wav', 'wb') as audio_file:
+            audio_file.write(wav_audio_data)
+        return open(dummy_file, "rb")
+            
+    def transcribe(self, audio_stream: bytes) -> str:
         client = OpenAI(
             api_key=get_var("OPENAI_API_KEY"),
         )
         transcript = client.audio.transcriptions.create(
-            model="whisper-1", file=audio_file, response_format="text"
+            model="whisper-1", file=audio_stream, response_format="text"
         )
         return transcript
 
     def run(self):
         if st.button("Transkribieren"):
             with st.spinner("Transkribiere Audio..."):
-                if self.formats.index(self.input_type) == 0:
-                    self.text = self.transcribe(self.output_file)
-                elif self.formats.index(self.input_type) == InputFormat.FILE.value:
-                    self.text = self.transcribe(self.output_file)
+                if self.formats.index(self.input_type) in (InputFormat.FILE.value, InputFormat.DEMO.value):
+                    audio = self.file2audio(self.output_file)
+                    self.text = self.transcribe(audio)
                 elif (
-                    self.formats.index(self.input_type) == InputFormat.ZIPPED_FILE.value
+                    self.formats.index(self.input_type) == InputFormat.RECORD.value
                 ):
-                    with zipfile.ZipFile(self.input_file, "r") as zip_ref:
-                        self.output_file = os.path.join(OUTPUT_PATH, "transcribed.zip")
-                        with zipfile.ZipFile(self.output_file, "w") as out_zip:
-                            for file_name in zip_ref.namelist():
-                                zip_ref.extract(file_name, TEMP_PATH)
-                                transcribed_text = self.transcribe(
-                                    os.path.join(TEMP_PATH, file_name)
-                                )
-                                txt_filename = os.path.splitext(file_name)[0] + ".txt"
-                                txt_path = os.path.join(TEMP_PATH, txt_filename)
-                                with open(txt_path, "w") as txt_file:
-                                    txt_file.write(transcribed_text)
-                                out_zip.write(txt_path, arcname=txt_filename)
-                    st.success("Transkription abgeschlossen.")
+                    audio = self.get_formatted_binary(self.wav_audio_data)
+                    self.text = self.transcribe(audio)
                 else:
                     st.info("Diese Option ist noch nicht verfügbar.")
+        
         if self.text != "":
             st.markdown("**Transkript**")
             st.markdown(self.text)
@@ -131,13 +144,3 @@ class Speech2Text(ToolBase):
                     file_name=OUTPUT_FILE,
                     mime="text/plain",
                 )
-        elif (
-            self.formats.index(self.input_type) == InputFormat.ZIPPED_FILE.value
-            and self.output_file
-        ):
-            st.download_button(
-                label="⬇️ Transkripte herunterladen",
-                data=self.text,
-                file_name=self.output_file,
-                mime="application/zip",
-            )
