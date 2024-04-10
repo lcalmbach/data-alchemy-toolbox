@@ -4,11 +4,11 @@
 
 Die DataAlchemy Toolbox (DATx) ist eine Sammlung von Werkzeugen zur Verarbeitung unstrukturierter Daten (Text, Audio, Bilder, Video). Sie umfasst Methoden, die für die Aufbereitung dieser Daten notwendig sind. Die Verfügbarkeit und die Eigenschaften der einzelnen Werkzeuge sind in der nachstehenden Tabelle aufgelistet. Die Toolbox wird kontinuierlich erweitert und verbessert.
 
-Bitte beachte, dass diese Applikation darauf abzielt, die Möglichkeiten verschiedener Large Language Model (LLM) -Technologien zu demonstrieren. Jedes Werkzeug ist so konzipiert, dass es sowohl in dieser Applikation, als auch eigenständig in einen bestehenden Prozess integriert verwendet werden kann.
+Bitte beachte, dass diese Applikation darauf abzielt, die Möglichkeiten verschiedener Large Language Model (LLM) -Technologien zu demonstrieren. Jedes Werkzeug ist so konzipiert, dass es sowohl in dieser Applikation, als auch eigenständig in einen bestehenden Prozess, integriert verwendet werden kann.
 
 | Funktionen | Verfügbarkeit |
 |------------|---------------|
-| **Anonymisierung** von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien | ✅ |
+| **Anonymisierung** von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien. diese Option wurde entfernt, da sie das Herunterladen eines lokalen Sprachmodells erfordert, was auf der für die Kapazität der Umgebung, auf welcher DataAlchemyToolbox zur Zeit läuft, leider sprengt. | ✅ |
 | **Klassifizierung** von Texten nach vorgegebenen Kategorien | ✅ |
 | **Speech2Text**: Umwandlung von Audio-Dateien in Text | ✅ |
 | **Bild zu Text** erstellt Bildbeschreibungen | ✅ |

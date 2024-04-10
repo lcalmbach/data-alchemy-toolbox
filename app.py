@@ -7,7 +7,7 @@ from tools import (
     speech2text,
     summarizer,
     translation,
-    anonymizer,
+    # anonymizer,
     intro,
     pdf2text,
     pdfchat,
@@ -19,18 +19,18 @@ from tools import (
     ocr,
 )
 
-__version__ = "0.1.11"
+__version__ = "0.1.12"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2024-03-14"
-MY_EMOJI = "🔧"
-MY_NAME = "Data Alchemy Toolbox"
+VERSION_DATE = "2024-10-04"
+MY_EMOJI = "🧰"
+MY_NAME = "Data-Alchemy-Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
 APP_URL = "https://data-alchemy-toolbox.streamlit.app/"
 
 menu_dic = {
     "Übersicht": intro.Intro,
-    "Anonymisierung": anonymizer.Anonymizer,
+    # "Anonymisierung": anonymizer.Anonymizer, # takes up too much space on streamlit sharing
     "Klassifizierung": classifier.Classifier,
     "Speech2Text": speech2text.Speech2Text,
     "Image2Text": image2text.Image2Text,
@@ -49,7 +49,7 @@ menu_dic = {
 # https://icons.getbootstrap.com/?q=image
 menu_icons = [
     "house",
-    "person",
+    # "person",
     "arrows-fullscreen",
     "mic-fill",
     "card-image",
