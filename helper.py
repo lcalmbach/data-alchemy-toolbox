@@ -15,7 +15,6 @@ import tiktoken
 import base64
 import requests
 import tiktoken
-from transformers import GPT2Tokenizer
 
 import math
 
