@@ -8,8 +8,9 @@ Bitte beachte, dass diese Applikation darauf abzielt, die Möglichkeiten verschi
 
 | Funktionen | Verfügbarkeit |
 |------------|---------------|
-| **Anonymisierung** von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien. diese Option wurde entfernt, da sie das Herunterladen eines lokalen Sprachmodells erfordert, was auf der für die Kapazität der Umgebung, auf welcher DataAlchemyToolbox zur Zeit läuft, leider sprengt. | ✅ |
+| **Anonymisierung** von Texten, z.B. zur Vorbereitung für die Bearbeitung in der Cloud mit LLM-Technologien. Diese Option wurde entfernt, da sie das Herunterladen eines lokalen Sprachmodells erfordert, was die Kapazität der Umgebung, auf welcher DataAlchemyToolbox zur Zeit läuft, leider sprengt. | ✅ |
 | **Klassifizierung** von Texten nach vorgegebenen Kategorien | ✅ |
+| **Sentiment Analyse** das Sprachmodell versucht das Gefühls des Autors beim Schreiben des Textes zu eruieren. | 🚧 |
 | **Speech2Text**: Umwandlung von Audio-Dateien in Text | ✅ |
 | **Bild zu Text** erstellt Bildbeschreibungen | ✅ |
 | **Zusammenfassung** von Texten aus Text- oder PDF-Dateien | ✅ |

@@ -3,6 +3,7 @@ from streamlit_option_menu import option_menu
 import logging
 from tools import (
     classifier,
+    sentiment_analysis,
     tokenizer,
     speech2text,
     summarizer,
@@ -19,10 +20,10 @@ from tools import (
     ocr,
 )
 
-__version__ = "0.1.12"
+__version__ = "0.1.13"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2024-10-04"
+VERSION_DATE = "2024-11-04"
 MY_EMOJI = "🧰"
 MY_NAME = "Data-Alchemy-Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
@@ -32,6 +33,7 @@ menu_dic = {
     "Übersicht": intro.Intro,
     # "Anonymisierung": anonymizer.Anonymizer, # takes up too much space on streamlit sharing
     "Klassifizierung": classifier.Classifier,
+    "Sentiment-Analyse": sentiment_analysis.SentientAnalysis,  
     "Speech2Text": speech2text.Speech2Text,
     "Image2Text": image2text.Image2Text,
     "Zusammenfassung": summarizer.Summary,
@@ -51,6 +53,7 @@ menu_icons = [
     "house",
     # "person",
     "arrows-fullscreen",
+    "emoji-smile",
     "mic-fill",
     "card-image",
     "arrows-angle-contract",
