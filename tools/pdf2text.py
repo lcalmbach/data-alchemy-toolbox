@@ -17,7 +17,6 @@ class InputFormat(Enum):
     FILE = 0
     URL = 1
     ZIPPED_FILE = 2
-    S3 = 3
 
 
 class Pdf2Text(ToolBase):
@@ -28,7 +27,6 @@ class Pdf2Text(ToolBase):
             "PDF Datei hochladen",
             "URL",
             "ZIP-Datei",
-            "S3 Bucket",
         ]
         self.text = None
         self.encoding_source = "utf-8"

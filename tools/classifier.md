@@ -1,9 +1,10 @@
 **Klassifizierung**: Dieses Tool ermöglicht es, eine Liste von Texten bestimmten, vordefinierten Kategorien zuzuordnen. Jeder Text kann dabei mehreren Kategorien zugeordnet werden. Folgende Inputformate werden unterstützt:
 
-1. **Demo-Modus**: Hierbei ist kein weiterer Input erforderlich, da der Input vordefiniert ist. Der Demodatensatz umfasst 20 Antworten von Schülern auf die Frage: "Was gefällt dir besonders gut an Basel?"
+1. **Demo-Modus**: Hierbei ist kein weiterer Input erforderlich, da der Input vordefiniert ist. Der Demodatensatz umfasst 20 Antworten von Schülern auf die Frage: "Was gefällt dir besonders gut an Basel?" Bei einer Befragung solchen offenen Fragen, das heisst Fragen, die eine Freitextantwort erlauben, können auf diese Weise tausende von Antworten kategorisiert werden und die Antworten z.B. grafisch ausgewertet werden.
 
-2. **Text-Input-Datei**: Diese sollte im folgenden Format vorliegen:
+2. **csv/xlsx Datei hochladen**: Bei dieser Option können die Text wie auch die Kategorien als Dateien im Excel oder Komma-separierten (csv) Format hochgeladen werden. Die Texte müssen im folgendem Format vorliegen:
     ```
+    Texte:
     text_id; text
     1; Mir gefällt das Münster und das Baden im Rhein.
     2; Ich finde toll, dass man mit dem Tram überall hinkommt.
@@ -16,9 +17,11 @@
     4; Restaurants
     ```
 
-Überprüfe zunächst die Einstellungen unter dem Menüpunkt **⚙️ Einstellungen**. Anschliessend kannst eine oder mehrere Dateien hochladen. Es ist auch möglich, mehrere Dateien in einem Zip-Archiv zu verpacken. Beachten Sie jedoch, dass das Archiv eine maximale Größe von 100 MB nicht überschreiten darf.
+    Überprüfe zunächst die Einstellungen unter dem Menüpunkt **⚙️ Einstellungen**. Anschliessend kannst eine oder mehrere Dateien hochladen. Es ist auch möglich, mehrere Dateien in einem Zip-Archiv zu verpacken. Beachte, dass das Archiv eine maximale Grösse von 100 MB nicht überschreiten darf.
 
-Das Zip-Archiv kann über den Download-Button heruntergeladen werden. Die Ergebnisse der Klassifizierung werden in einem Zip-Archiv als eine oder mehrere Textdateien zurückgegeben. Diese Dateien tragen den gleichen Namen wie die ursprünglichen CSV- oder XLSX-Dateien.
+    Das Zip-Archiv kann über den Download-Button heruntergeladen werden. Die Ergebnisse der Klassifizierung werden in einem Zip-Archiv als eine oder mehrere Textdateien zurückgegeben. Diese Dateien tragen den gleichen Namen wie die ursprünglichen CSV- oder XLSX-Dateien.
+
+3. **Interaktive Eingabe**: Bei dieser Option können die Texte und Kategorien direkt im Eingabefeld eingegeben werden. Dieser Modus eignet sich zum Beispiel um die Sensitivität des Modells zu testen oder um die Funktionsweise des Tools zu demonstrieren.
 
 **Anwendungsmöglichkeiten**:
 

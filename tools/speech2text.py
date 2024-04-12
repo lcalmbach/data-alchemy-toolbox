@@ -23,6 +23,7 @@ class InputFormat(Enum):
     FILE = 1
     RECORD = 2
 
+
 def save_wav_audio_data(wav_audio_data, file_name):
     """
     Save WAV audio data to a file.
