@@ -50,7 +50,7 @@ class SentientAnalysis(ToolBase):
         self.texts_df = pd.DataFrame()
         self.sentiments = ["positiv", "negativ", "neutral"]
 
-        self.formats = ["Demo", "pdf/txt Datei hochladen"]
+        self.formats = ["Demo"]
         self.input_type = self.formats[0]
         self.model = MODEL_OPTIONS[0]
         self.results = []
@@ -67,8 +67,6 @@ class SentientAnalysis(ToolBase):
 
         if self.formats.index(self.input_type) == InputFormat.DEMO.value:
             manage_demo()
-        elif self.formats.index(self.input_type) == InputFormat.FILE.value:
-            manage_file_upload()
         else:
             st.warning("Diese Option wird noch nicht unterstützt.")
         

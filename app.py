@@ -20,10 +20,10 @@ from tools import (
     ocr,
 )
 
-__version__ = "0.1.13"
+__version__ = "0.1.14"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2024-11-04"
+VERSION_DATE = "2024-04-13"
 MY_EMOJI = "🧰"
 MY_NAME = "Data-Alchemy-Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
@@ -127,6 +127,11 @@ def check_in_session_state(key: str, logger):
 
 
 def main():
+    """
+    Main function of the application. Initializes the layout, creates the 
+    sidebar menu, and displays the selected application.
+    """
+
     init_layout()
     logger = logging.getLogger("data-alchemy-toolbox")
     menu_options = list(menu_dic.keys())

@@ -1,7 +1,6 @@
 import streamlit as st
 import os
 import pandas as pd
-import zipfile
 import shutil
 from helper import (
     init_logging,
@@ -10,13 +9,13 @@ from helper import (
     empty_folder,
     url_exists,
     get_original_url,
+    empty_folder
 )
 from whoosh.index import create_in
 from whoosh import index
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser
-from whoosh.query import Every, Term
-from pathlib import Path
+from whoosh.query import Term, Every
 import time
 
 from tools.tool_base import (
@@ -36,7 +35,7 @@ INDEX_SOURCES = {
     "local": {
         "label": "Lokale Dokumentensammlung",
         "help": "Lade eine oder mehrere Dokumente hoch, die du durchsuchen möchtest. die dokumente werden lokal gespeichert.",
-        "docs_path": DOCS_PATH,
+        "docs_path": DOCS_PATH + "finder",
         "indexdir": INDEX_PATH + "indexdir_local",
     },
     "remote": {
@@ -44,12 +43,6 @@ INDEX_SOURCES = {
         "help": "Lade eine Linksammlung hoch, welche Links zu Dokumenten enthält, die du durchsuchen möchtest.",
         "docs_path": None,
         "indexdir": INDEX_PATH + "indexdir_remote",
-    },
-    "s3": {
-        "label": "Ein S3 bucket",
-        "help": "gib eine ARN zu einem S3 bucket ein, der Dokumente enthält, die du durchsuchen möchtest.",
-        "docs_path": None,
-        "indexdir": INDEX_PATH + "indexdir_s3",
     },
 }
 
@@ -141,10 +134,12 @@ class Finder(ToolBase):
             bool: True if the index was successfully purged, False otherwise.
         """
         try:
-            source = INDEX_SOURCES[self.index_source]
-            shutil.rmtree(source["indexdir"])
-            # trigger regeneration of empty index
-            self.index_source = self._index_source
+            empty_folder(INDEX_SOURCES[self.index_source]["docs_path"])
+            with self.ix.writer() as writer:
+                writer.delete_by_query(Every())
+                writer.commit()
+            
+                
         except Exception as e:
             logger.warning(f"Error while purging index: {e}")
 
@@ -202,7 +197,7 @@ class Finder(ToolBase):
         Displays the settings options for the tokenizer tool based on the selected input format.
 
         The method prompts the user to select an input format and then presents the appropriate input options based on the selected format.
-        The available input formats include DEMO, FILE, ZIPPED_FILE, and S3.
+        The available input formats include DEMO, FILE, ZIPPED_FILE.
 
         Returns:
             None
@@ -222,12 +217,13 @@ class Finder(ToolBase):
             )
             if uploaded_files:
                 for file in uploaded_files:
-                    if not self.document_exists_in_index("title", file.name):
+                    target_path = os.path.join(INDEX_SOURCES[self.index_source]["docs_path"], file.name)
+                    if not os.path.exists(target_path):
                         text = extract_text_from_uploaded_file(file)
                         doc = Document(file.name, file.name, text)
                         self.add_document(doc)
                         save_path = os.path.join(
-                            INDEX_SOURCES[self.index_source]["docs_path"], file.name
+                            target_path
                         )
                         try:
                             with open(save_path, "wb") as f:
@@ -295,7 +291,11 @@ class Finder(ToolBase):
             with self.ix.searcher() as s:
                 results = s.search(q, limit=None)
                 results.fragmenter.surround = 50
-                for hit in results:
-                    st.markdown(hit.highlights("content"), unsafe_allow_html=True)
-                    st.markdown(hit["path"])
-                    st.markdown("----")
+                if len(results) == 0:
+                    st.info("Keine Ergebnisse gefunden")
+                else:
+                    st.info(f"{len(results)} Ergebnisse gefunden")
+                    for hit in results:
+                        st.markdown(hit.highlights("content"), unsafe_allow_html=True)
+                        st.markdown(hit['path'])
+                        st.markdown("----")

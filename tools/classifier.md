@@ -1,6 +1,6 @@
 **Klassifizierung**: Dieses Tool ermöglicht es, eine Liste von Texten bestimmten, vordefinierten Kategorien zuzuordnen. Jeder Text kann dabei mehreren Kategorien zugeordnet werden. Folgende Inputformate werden unterstützt:
 
-1. **Demo-Modus**: Hierbei ist kein weiterer Input erforderlich, da der Input vordefiniert ist. Der Demodatensatz umfasst 20 Antworten von Schülern auf die Frage: "Was gefällt dir besonders gut an Basel?" Bei einer Befragung solchen offenen Fragen, das heisst Fragen, die eine Freitextantwort erlauben, können auf diese Weise tausende von Antworten kategorisiert werden und die Antworten z.B. grafisch ausgewertet werden.
+1. **Demo-Modus**: Hierbei ist keine Eingabe erforderlich, da der Input vordefiniert ist. Der Demo-Datensatz umfasst 20 Antworten von Schülern auf die Frage: "Was gefällt dir besonders gut an Basel?" Bei einer Befragung solchen offenen Fragen, das heisst Fragen, die eine Freitextantwort erlauben, können auf diese Weise tausende von Antworten kategorisiert werden und die Antworten z.B. grafisch ausgewertet werden.
 
 2. **csv/xlsx Datei hochladen**: Bei dieser Option können die Text wie auch die Kategorien als Dateien im Excel oder Komma-separierten (csv) Format hochgeladen werden. Die Texte müssen im folgendem Format vorliegen:
     ```

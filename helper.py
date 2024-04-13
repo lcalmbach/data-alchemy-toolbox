@@ -15,6 +15,7 @@ import tiktoken
 import base64
 import requests
 import tiktoken
+import shutil
 
 import math
 
@@ -594,5 +595,16 @@ def display_pdf(file):
     # Displaying File
     st.markdown(pdf_display, unsafe_allow_html=True)
 
+
+def empty_folder(directory):
+    for entry in os.listdir(directory):
+        path = os.path.join(directory, entry)
+        try:
+            if os.path.isfile(path) or os.path.islink(path):
+                os.remove(path)  # Remove files and links
+            elif os.path.isdir(path):
+                shutil.rmtree(path)  # Remove non-empty directories
+        except Exception as e:
+            print(f'Failed to delete {path}. Reason: {e}')
 
 logger = init_logging(__name__, LOGFILE)
