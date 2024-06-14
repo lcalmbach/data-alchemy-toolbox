@@ -1,19 +1,14 @@
 import streamlit as st
-import json
-from datetime import datetime
 import os
 import pandas as pd
-import altair as alt
 from enum import Enum
 
 from helper import init_logging, extract_text_from_file
 from tools.tool_base import (
     ToolBase,
-    MODEL_OPTIONS,
-    MAX_ERRORS,
+    DEFAULT_MODEL,
     LOGFILE,
     DEMO_PATH,
-    OUTPUT_PATH,
 )
 
 
@@ -52,7 +47,7 @@ class SentientAnalysis(ToolBase):
 
         self.formats = ["Demo"]
         self.input_type = self.formats[0]
-        self.model = MODEL_OPTIONS[0]
+        self.model = DEFAULT_MODEL
         self.results = []
 
         self.script_name, script_extension = os.path.splitext(__file__)

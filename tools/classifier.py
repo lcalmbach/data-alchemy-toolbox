@@ -9,7 +9,7 @@ from enum import Enum
 from helper import create_file, append_row, zip_files, init_logging
 from tools.tool_base import (
     ToolBase,
-    MODEL_OPTIONS,
+    DEFAULT_MODEL,
     MAX_ERRORS,
     LOGFILE,
     DEMO_PATH,
@@ -22,7 +22,6 @@ OUTPUT_SHORT = OUTPUT_PATH + "output_short_{}.csv"
 OUTPUT_STAT = OUTPUT_PATH + "output_stat_{}.csv"
 OUTPUT_ZIP = OUTPUT_PATH + "output_{}.zip"
 OUTPUT_ERROR = OUTPUT_PATH + "output_error_{}.txt"
-DEFAULT_MODEL = "gpt-3.5-turbo"
 DEMO_TEXTS_FILE = DEMO_PATH + "demo_texts.xlsx"
 DEMO_CATEORIES_FILE = DEMO_PATH + "demo_categories.xlsx"
 
@@ -68,7 +67,7 @@ class Classifier(ToolBase):
         self.no_match_code = -99
         self.no_match_code_options = []
         self.max_categories = 10
-        self.model = MODEL_OPTIONS[0]
+        self.model = DEFAULT_MODEL
 
         self.key = f"{datetime.now().strftime('%Y-%m-%d-%H-%M')}"
         self.output_file_long = OUTPUT_LONG.format(self.key)

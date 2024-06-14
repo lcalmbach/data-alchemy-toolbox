@@ -1,11 +1,13 @@
 # resource: https://www.assemblyai.com/blog/text-summarization-nlp-5-best-apis/
 
-import streamlit as st
-import pandas as pd
-import zipfile
 import os
-from enum import Enum
 import json
+import zipfile
+from enum import Enum
+
+import pandas as pd
+import streamlit as st
+
 from helper import (
     init_logging,
     check_file_type,
@@ -21,7 +23,13 @@ from helper import (
     save_json_object,
 )
 from tools.tokenizer import split_text
-from tools.tool_base import ToolBase, MODEL_OPTIONS, LOGFILE, OUTPUT_PATH
+from tools.tool_base import (
+    ToolBase,
+    MODEL_OPTIONS,
+    DEFAULT_MODEL,
+    LOGFILE,
+    OUTPUT_PATH
+)
 
 logger = init_logging(__name__, LOGFILE)
 
@@ -54,7 +62,7 @@ class Summary(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
         self.logger = logger
-        self.model = MODEL_OPTIONS[1]
+        self.model = DEFAULT_MODEL
         self.title = "Zusammenfassung"
         self.script_name, script_extension = os.path.splitext(__file__)
 
@@ -70,6 +78,7 @@ class Summary(ToolBase):
 
         self.intro = self.get_intro()
         self.input_format = INPUT_FORMAT_OPTIONS[0]
+    
     @property
     def system_prompt(self):
         limit_expression = f"{self.limit_number} {self.limit_type}"

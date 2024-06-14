@@ -20,10 +20,10 @@ from tools import (
     ocr,
 )
 
-__version__ = "0.1.14"
+__version__ = "0.1.15"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2024-04-13"
+VERSION_DATE = "2024-06-14"
 MY_EMOJI = "🧰"
 MY_NAME = "Data-Alchemy-Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"

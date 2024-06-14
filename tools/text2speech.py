@@ -1,9 +1,10 @@
-import streamlit as st
 import os
-from openai import OpenAI
 from enum import Enum
 
-from helper import get_var, extract_text_from_file, save_uploadedfile
+import streamlit as st
+from openai import OpenAI
+
+from helper import get_var, extract_text_from_file
 from tools.tool_base import ToolBase, TEMP_PATH, OUTPUT_PATH, DEMO_PATH
 
 DEMO_FILE = DEMO_PATH + "000000406031.pdf"
@@ -55,7 +56,7 @@ class Text2Speech(ToolBase):
     def convert2audio(self, text: str) -> str:
         client = OpenAI()
         response = client.audio.speech.create(model="tts-1", voice="alloy", input=text)
-        response.stream_to_file(OUTPUT_FILE)
+        response.with_streaming_response().method()(OUTPUT_FILE)
 
     def run(self):
         if st.button("Konvertiere"):

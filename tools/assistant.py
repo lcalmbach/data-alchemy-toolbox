@@ -26,7 +26,7 @@ class OpenHourse(ToolBase):
         super().__init__(logger)
         self.title = "Assistent für die Öffnungszeiten der kantonalen Verwaltung"
         self.formats = ["Demo"]
-        self.model = "gpt-4"
+        self.model = DEFAULT_MODEL
         self.text = ""
         self.current_date = date.today()
         self.current_time = datetime.now().time()

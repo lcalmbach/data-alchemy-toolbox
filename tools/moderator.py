@@ -10,14 +10,13 @@ from helper import init_logging, extract_text_from_file
 from tools.tool_base import (
     ToolBase,
     MODEL_OPTIONS,
-    MAX_ERRORS,
+    DEFAULT_MODEL,
     LOGFILE,
     DEMO_PATH,
-    OUTPUT_PATH,
 )
 
 
-DEFAULT_MODEL = "gpt-3.5-turbo"
+DEFAULT_MODEL = DEFAULT_MODEL
 DEMO_TEXTS_FILES = [DEMO_PATH + "000000406047.pdf", DEMO_PATH + "drohbrief.txt"]
 
 
