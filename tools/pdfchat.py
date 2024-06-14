@@ -1,6 +1,8 @@
 # https://blog.nextideatech.com/chat-with-documents-using-langchain-gpt-4-python/
 # https://github.com/shahidul034/Chat-with-pdf-using-LLM-langchain-and-streamlit
 import os
+from enum import Enum
+
 import pyperclip
 import streamlit as st
 import pandas as pd
@@ -12,13 +14,12 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.callbacks.manager import CallbackManager
-from enum import Enum
 
-from tools.tool_base import ToolBase, DEMO_PATH
+
+from tools.tool_base import ToolBase, DEMO_PATH, DEFAULT_MODEL
 from helper import (
     show_download_button,
     extract_text_from_file,
-    get_var,
     save_uploadedfile
 )
 
@@ -34,7 +35,7 @@ class PdfChat(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
         self.title = "💬 PDF-Chat"
-        self.model = 'gpt-4'
+        self.model = DEFAULT_MODEL
         self.formats = ["Demo", "PDF Datei hochladen", "URL"]
         self._input_type = None
         self._input_file = None
