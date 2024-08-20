@@ -21,7 +21,7 @@ from tools import (
     video2audio,
 )
 
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
 VERSION_DATE = "2024-08-20"

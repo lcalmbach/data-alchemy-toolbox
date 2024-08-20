@@ -19,10 +19,9 @@ class InputFormat(Enum):
 class Video2Audio(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
-        self.title = "Video zu Audio"
+        self.title = "🚧Video zu Audio"
         self.formats = [
             "mp4 Datei hochladen",
-            
         ]
         self.text = None
         self.script_name, script_extension = os.path.splitext(__file__)
