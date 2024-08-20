@@ -18,12 +18,13 @@ from tools import (
     text2speech,
     imagegen,
     ocr,
+    video2audio,
 )
 
 __version__ = "0.1.15"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2024-06-14"
+VERSION_DATE = "2024-08-20"
 MY_EMOJI = "🧰"
 MY_NAME = "Data-Alchemy-Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"
@@ -46,6 +47,7 @@ menu_dic = {
     "Text zu Audio": text2speech.Text2Speech,
     "Bildgenerator": imagegen.ImageGenerator,
     "Texterkennung": ocr.Ocr,
+    "Video2Audio": video2audio.Video2Audio,
 }
 
 # https://icons.getbootstrap.com/?q=image
@@ -66,6 +68,7 @@ menu_icons = [
     "soundwave",
     "card-image",
     "card-text",
+    "camera-reels"
 ]
 
 

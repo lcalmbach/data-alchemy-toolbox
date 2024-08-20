@@ -56,7 +56,10 @@ class Text2Speech(ToolBase):
     def convert2audio(self, text: str) -> str:
         client = OpenAI()
         response = client.audio.speech.create(model="tts-1", voice="alloy", input=text)
-        response.with_streaming_response().method()(OUTPUT_FILE)
+        
+        # Assuming response.content contains the binary audio data
+        with open(OUTPUT_FILE, "wb") as file:
+            file.write(response.content)
 
     def run(self):
         if st.button("Konvertiere"):

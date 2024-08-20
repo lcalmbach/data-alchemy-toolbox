@@ -23,6 +23,7 @@ Bitte beachte, dass diese Applikation darauf abzielt, die Möglichkeiten verschi
 | **Text zu Audio** wandelt Texte in gesprochene Sprache um. | 🚧 | 
 | **Bildgenerator** erlaubt es, Bilder in verschiedenen Formaten zu generieren. Es wird das [DALLE-3](https://openai.com/dall-e-3) API verwendet. | 🚧 |
 | **Texterkennung** Erlaubt es, Texte aus Bilddateien zu extrahieren. Es wird Amazon-Textract verwendet| 🚧 |
+| **Audio2Video** Erlaubt es, Audiodateien aus Videos zu extrahieren. Dies wird als Vorstufe verwendet, wenn der Text eines Videos extrahiert werden soll| 🚧 |
 </br>
 
 | **Legende zur Verfügbarkeit:** | |
