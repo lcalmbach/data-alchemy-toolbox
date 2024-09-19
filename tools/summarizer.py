@@ -68,7 +68,7 @@ class Summary(ToolBase):
 
         self.limit_type = LIMIT_OPTIONS[0]
         self.limit_number = 500
-        self.model = MODEL_OPTIONS[1]
+        self.model = DEFAULT_MODEL
         self.input_files = []
         self.output_file = None
         self.results = []

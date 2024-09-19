@@ -116,7 +116,7 @@ class Tokenizer(ToolBase):
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
         self.input_format = INPUT_FORMAT_OPTIONS[0]
-        self.model = MODEL_OPTIONS[1]
+        self.model = MODEL_OPTIONS[0]
         self.input_file = None
         self.output_file = None
         self.html = None
@@ -176,7 +176,7 @@ class Tokenizer(ToolBase):
             len(openai_tokens) / 1000 * MODEL_TOKEN_PRICING[MODEL_OPTIONS[0]]["in"]
         )
         preis_16k = "{:.3f} USD".format(
-            len(openai_tokens) / 1000 * MODEL_TOKEN_PRICING[MODEL_OPTIONS[1]]["in"]
+            len(openai_tokens) / 1000 * MODEL_TOKEN_PRICING[MODEL_OPTIONS[0]]["in"]
         )
         df = pd.DataFrame(
             {
