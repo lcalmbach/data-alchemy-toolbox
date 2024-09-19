@@ -4,4 +4,5 @@ work
 ./tools/__pycache__
 test*.*
 ./data/output/*.csv
+.streamlit/secrets.toml
 

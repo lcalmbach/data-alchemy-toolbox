@@ -14,6 +14,7 @@ from tools.tool_base import (
     MODEL_TOKEN_PRICING,
     DEMO_PATH,
     LOGFILE,
+    DEFAULT_MODEL
 )
 
 nltk.download("punkt")
@@ -47,7 +48,7 @@ class OutputFormat(Enum):
     ZIP = 2
 
 
-def calc_tokens(text: str, model_name="gpt-3.5"):
+def calc_tokens(text: str, model_name=DEFAULT_MODEL):
     """
     Calculates the number of tokens in a given text.
 
@@ -58,7 +59,11 @@ def calc_tokens(text: str, model_name="gpt-3.5"):
     Returns:
         int: The number of tokens in the text.
     """
-    encoding = tiktoken.encoding_for_model(model_name)
+    try:
+        encoding = tiktoken.encoding_for_model(model_name)
+    except KeyError:
+        print("Warning: model not found. Using cl100k_base encoding.")
+        encoding = tiktoken.get_encoding("cl100k_base")
     tokens = encoding.encode(text)
     return tokens
 
@@ -66,7 +71,7 @@ def calc_tokens(text: str, model_name="gpt-3.5"):
 def split_text(
     text: str,
     system_prompt: str = "",
-    model_name="gpt-3.5",
+    model_name=DEFAULT_MODEL,
     max_tokens_per_chunk: int = 4097,
     expected_completion_tokens: int = 1000,
 ):
