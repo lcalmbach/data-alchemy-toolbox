@@ -19,6 +19,7 @@ from tools import (
     imagegen,
     ocr,
     video2audio,
+    simplify_language
 )
 
 __version__ = "0.1.16"
@@ -48,6 +49,7 @@ menu_dic = {
     "Bildgenerator": imagegen.ImageGenerator,
     "Texterkennung": ocr.Ocr,
     "Video2Audio": video2audio.Video2Audio,
+    "Sprache vereinfachen": simplify_language.SimplifyLanguage
 }
 
 # https://icons.getbootstrap.com/?q=image
@@ -68,7 +70,8 @@ menu_icons = [
     "soundwave",
     "card-image",
     "card-text",
-    "camera-reels"
+    "camera-reels",
+    "bandaid"
 ]
 
 
