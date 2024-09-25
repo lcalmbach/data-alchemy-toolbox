@@ -12,10 +12,13 @@ pyperclip==1.8.2
 moviepy==1.0.3
 langchain==0.1.11
 langchain-community==0.0.27
-tiktoken==0.3.3
+tiktoken==0.7.0
 boto3==1.33.9
 nltk==3.8.1
 whoosh==2.7.4
 openpyxl==3.1.2
 faiss-cpu==1.8.0
 streamlit-audiorec==0.1.3
+spacy
+python-docx
+scikit-learn
