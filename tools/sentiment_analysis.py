@@ -9,10 +9,10 @@ from tools.tool_base import (
     DEFAULT_MODEL,
     LOGFILE,
     DEMO_PATH,
+    DEFAULT_MODEL
 )
 
 
-DEFAULT_MODEL = "gpt-3.5-turbo"
 DEMO_TEXTS_FILES = [DEMO_PATH + "000000406047.pdf", DEMO_PATH + "drohbrief.txt"]
 SYSTEM_PROMPT_TEMPLATE = """You will be provided with a text. Your task is to perform a sentiment analysis on the text you respond with a list of two results:
 1. the sentiment from the followoing list of sentiments[{}].

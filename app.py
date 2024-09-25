@@ -22,10 +22,10 @@ from tools import (
     simplify_language
 )
 
-__version__ = "0.1.16"
+__version__ = "0.1.17"
 __author__ = "data-alchemists des DigiLab BS"
 __author_email__ = "data-alchemists@bs.ch"
-VERSION_DATE = "2024-08-20"
+VERSION_DATE = "2024-09-19"
 MY_EMOJI = "🧰"
 MY_NAME = "Data-Alchemy-Toolbox"
 GIT_REPO = "https://github.com/lcalmbach/data-alchemy-toolbox"

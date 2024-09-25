@@ -14,6 +14,7 @@ from tools.tool_base import (
     LOGFILE,
     DEMO_PATH,
     OUTPUT_PATH,
+    DEFAULT_MODEL
 )
 
 
