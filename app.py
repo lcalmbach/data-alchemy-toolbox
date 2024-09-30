@@ -52,7 +52,7 @@ menu_dic = {
     "Sprache vereinfachen": simplify_language.SimplifyLanguage
 }
 
-# https://icons.getbootstrap.com/?q=image
+# https://icons.getbootstrap.com/?q=image 
 menu_icons = [
     "house",
     # "person",

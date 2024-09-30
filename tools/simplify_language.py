@@ -46,7 +46,7 @@ TEXT_AREA_HEIGHT = 600
 # Adjust to your needs. However, we found that users can work and validate better when we nudge to work with shorter texts.
 MAX_CHARS_INPUT = 10_000
 
-# From our testing we derive a sensible temperature of 0.5 as a good trade-off between creativity and coherence. Adjust this to your needs.
+# From our testing we derive a sensible temperature of 0.5 as  a good trade-off between creativity and coherence. Adjust this to your needs.
 TEMPERATURE = 0.5
 
 # Constants for the formatting of the Word document that can be downloaded.

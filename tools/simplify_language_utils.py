@@ -1,5 +1,6 @@
 # Copied from: https://github.com/machinelearningZH/simply-simplify-language/blob/main/_streamlit_app/utils_prompts.py
 
+
 # We derived the following prompts for «Einfache Sprache» (ES) and «Leichte Sprache» (LS) mainly from our guidelines of the administration of the Canton of Zurich. According to our testing these are good defaults and prove to be helpful for our employees. However, we strongly recommend to validate and adjust these rules to the specific needs of your organization.
 
 # References:

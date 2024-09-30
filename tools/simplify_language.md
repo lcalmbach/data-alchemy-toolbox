@@ -1,4 +1,4 @@
-**Sprache vereinfachen**: 
+# Sprache vereinfachen
 
 Dieses Tool ermöglicht es automatisch Texte in einfache Sprache zu übersetzen. Einfache Sprache macht Innhalte für ein breites Publikum zugänglich.
 

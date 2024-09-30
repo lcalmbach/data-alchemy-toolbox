@@ -28,7 +28,7 @@ FEATURES = {
 
 cefr_vocab = pd.read_parquet("data/cefr_vocab.parq")
 
-# If you want to adapt to High German and the use of `ß` rather than `ss`,
+# If you want to adapt to High German and the use of  `ß` rather than `ss`,
 # change "lemma_ch" to "lemma" in the following lines.
 vocab_a1 = cefr_vocab[cefr_vocab["level"] == "A1"]["lemma_ch"].values
 vocab_a2 = cefr_vocab[cefr_vocab["level"] == "A2"]["lemma_ch"].values
