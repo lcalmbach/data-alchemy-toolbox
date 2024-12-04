@@ -2,7 +2,7 @@ streamlit==1.33.0
 streamlit_lottie==0.0.5
 streamlit_option_menu==0.3.6
 streamlit_chat==0.1.1
-openai==1.13.3
+openai==1.56.1
 iso639==0.1.4
 # Flair==0.13.1
 # presidio_analyzer==2.2.351
