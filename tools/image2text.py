@@ -195,7 +195,7 @@ class Image2Text(ToolBase):
         if st.button("Bild zu Text", disabled=self.input_file == sel_image):
             self.input_file = sel_image
             with st.spinner("Bilderkennung läuft..."):
-                self.text = self.image2text(TEMP_PATH + self.input_file.name)
+                self.text = self.image2text(self.input_file)
         if self.text:
             st.text_area("Beschreibung des Bilds", self.text, height=500)
 
@@ -203,7 +203,7 @@ class Image2Text(ToolBase):
         if self.input_file is not None:
             image = Image.open(self.input_file)
             st.image(image, caption="Hochgeladenes Bild", use_column_width=True)
-            metadata = self.extract_metadata(TEMP_PATH + self.input_file.name)
+            metadata = self.extract_metadata(TEMP_PATH + self.input_file)
             with st.expander("EXIF Metadaten"):
                 st.write(metadata)
         if st.button("Bild zu Text", disabled=self.input_file is None):
