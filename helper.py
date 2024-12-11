@@ -607,4 +607,9 @@ def empty_folder(directory):
         except Exception as e:
             print(f'Failed to delete {path}. Reason: {e}')
 
+
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    return base64.b64encode(image_file.read()).decode('utf-8')
+  
 logger = init_logging(__name__, LOGFILE)

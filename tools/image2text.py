@@ -16,14 +16,12 @@ from helper import (
     encode_image,
     convert_df_to_csv,
     url_exists,
+    encode_image,
 )
-from tools.tool_base import ToolBase, TEMP_PATH, OUTPUT_PATH, DEMO_PATH
+from tools.tool_base import ToolBase, TEMP_PATH, IMAGE_PATH, UPLOAD_PATH
 
 
-URL_ROOT = "https://images-datbx.s3.eu-central-1.amazonaws.com/"
 FILE_FORMAT_OPTIONS = ["jpg", "jpeg", "png", "gif"]
-DEMO_FILE = DEMO_PATH + "demo_images.csv"
-
 
 class InputFormat(Enum):
     DEMO = 0
@@ -37,7 +35,7 @@ class Image2Text(ToolBase):
         super().__init__(logger)
         self.title = "Image zu Text"
         self.formats = ["Demo", "Image File", "Image URL", "Zip File"]
-        self.MODEL_OPTIONS = ["gpt-4-vision-preview"]
+        self.MODEL_OPTIONS = ["gpt-4o-mini", "gpt-4o"]
         self.model = self.MODEL_OPTIONS[0]
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()
@@ -45,7 +43,15 @@ class Image2Text(ToolBase):
         self.input_file = None
         self.image_dict = {}
         self.text_dict = {}
+        self.demo_images = self.get_demo_images()
+        self.input_file_url = ''
 
+    def get_demo_images(self):
+        # generates a list of image_file_names: imag_file_path objects from the impaage_path directory
+        image_files = os.listdir(IMAGE_PATH)
+        image_files = {IMAGE_PATH + file:file for file in image_files}
+        return image_files
+    
     def extract_metadata(self, source_path: str) -> dict:
         """
         Extracts metadata from an image.
@@ -79,7 +85,7 @@ class Image2Text(ToolBase):
         self.model = st.selectbox(
             label="Modell",
             options=self.MODEL_OPTIONS,
-            help="Zur Zeit wird nur das Modell gpt-4-vision unterstützt.",
+            help="Zur Zeit wird nur das Modell gpt-4o-mini unterstützt.",
         )
         if self.formats.index(self.input_type) == InputFormat.FILE.value:
             self.input_file = st.file_uploader(
@@ -97,26 +103,25 @@ class Image2Text(ToolBase):
                 else:
                     st.error(err_msg)
         elif self.formats.index(self.input_type) == InputFormat.URL.value:
-            bild = st.text_input(
+            image_url = st.text_input(
                 "Bild URL eingeben",
                 help="Gebe die URL ein für das Bild, das du beschreiben möchtest.",
             )
-            ok, err_msg = url_exists(bild)
-            if ok and bild != self.input_file:
-                self.input_file = bild
+            ok, err_msg = url_exists(image_url)
+            if ok and image_url != self.input_file_url:
+                self.input_file_url = image_url
                 self.text = None
-                try:
-                    response = requests.get(self.input_file)
+                try:    
+                    response = requests.get(self.input_file_url)
                     response.raise_for_status()  # Stellt sicher, dass die Anfrage erfolgreich war
-
-                    # Bild laden und anzeigen
                     image = Image.open(BytesIO(response.content))
                     st.image(
                         image,
-                        caption=f"Geladenes Bild ({self.input_file}).",
+                        caption=f"Geladenes Bild ({self.input_file_url}).",
                         use_column_width=True,
                     )
-
+                    self.input_file = UPLOAD_PATH + "temp_image.jpg"
+                    image.save(self.input_file)
                 except Exception as e:
                     # only report error if the user has entered a URL
                     if self.input_file.startswith("http"):
@@ -147,8 +152,9 @@ class Image2Text(ToolBase):
                     self.image_dict[file], caption=file_name, use_column_width=True
                 )
 
-    def image2text(self, url: str) -> str:
+    def image2text(self, file_path: str) -> str:
         client = OpenAI()
+        base64_image = encode_image(file_path)
         response = client.chat.completions.create(
             model=self.model,
             messages=[
@@ -157,12 +163,13 @@ class Image2Text(ToolBase):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Descscribe the picture in german. the location is Basel, Switzerland",
+                            "text": "Descscribe the picture in german. The location is Basel, Switzerland",
                         },
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": url,
+                                "url":  f"data:image/jpeg;base64,{base64_image}",
+                                "detail": "high"
                             },
                         },
                     ],
@@ -173,12 +180,13 @@ class Image2Text(ToolBase):
         return response.choices[0].message.content
 
     def run_demo(self):
-        images_df = pd.read_csv(DEMO_FILE)
-        images_df.columns = ["url"]
-        sel_image = st.selectbox("Wähle ein Bild aus", images_df["url"])
-        url = f"{URL_ROOT}{sel_image}"
-        st.image(url)
-        metadata = self.extract_metadata(url)
+        sel_image = st.selectbox(
+            "Wähle ein Bild aus", 
+            options=list(self.demo_images.keys()),
+            format_func=lambda x: self.demo_images[x]
+        )
+        st.image(sel_image)
+        metadata = self.extract_metadata(sel_image)
         with st.expander("EXIF Metadaten"):
             st.write(metadata)
         # make sure the text does not appear if the user selects a new image
@@ -187,7 +195,7 @@ class Image2Text(ToolBase):
         if st.button("Bild zu Text", disabled=self.input_file == sel_image):
             self.input_file = sel_image
             with st.spinner("Bilderkennung läuft..."):
-                self.text = self.image2text(url)
+                self.text = self.image2text(TEMP_PATH + self.input_file.name)
         if self.text:
             st.text_area("Beschreibung des Bilds", self.text, height=500)
 
@@ -206,7 +214,7 @@ class Image2Text(ToolBase):
             st.text_area("Beschreibung des Bilds", self.text, height=500)
 
     def run_url(self):
-        ok, err_msg = url_exists(self.input_file)
+        ok = os.path.isfile(self.input_file)
         if ok:
             st.image(self.input_file)
             metadata = self.extract_metadata(self.input_file)

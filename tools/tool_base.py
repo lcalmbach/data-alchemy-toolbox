@@ -13,6 +13,7 @@ TEMP_PATH = './data/temp/'
 OUTPUT_PATH = './data/output/'
 INDEX_PATH = './data/index/'
 DEMO_PATH = './data/demo/'
+UPLOAD_PATH = './data/uploads/'
 DOCS_PATH = DEMO_PATH + 'docs/'
 ENCODING_OPTIONS = ['utf-8', 'latin1', 'cp1252']
 LOGFILE = './data-alchemy-toolbox.log'
@@ -25,6 +26,7 @@ MODEL_TOKEN_PRICING = {
     MODEL_OPTIONS[0]: {'in': 0.0015, 'out': 0.002},
 
 }
+IMAGE_PATH = './assets/images/'
 MODEL_MAX_TOKENS = {MODEL_OPTIONS[0]: 128000}
 DEV_WORKSTATIONS = ['Liestal']
 
