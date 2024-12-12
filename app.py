@@ -24,7 +24,7 @@ from tools import (
 
 __version__ = "0.1.20"
 __author__ = "data-alchemists des DigiLab BS"
-__author_email__ = "data-alchemists@bs.ch"
+__author_email__ = "lukas.calmbach@bs.ch"
 VERSION_DATE = "2024-12-12"
 MY_EMOJI = "🧰"
 MY_NAME = "Data-Alchemy-Toolbox"
