@@ -33,8 +33,8 @@ class InputFormat(Enum):
 class Image2Text(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
-        self.title = "Image zu Text"
-        self.formats = ["Demo", "Image File", "Image URL", "Zip File"]
+        self.title = "Image2Text"
+        self.formats = ["Demo", "Image File", "Image URL"]
         self.MODEL_OPTIONS = ["gpt-4o-mini", "gpt-4o"]
         self.model = self.MODEL_OPTIONS[0]
         self.script_name, script_extension = os.path.splitext(__file__)
@@ -88,13 +88,13 @@ class Image2Text(ToolBase):
             help="Zur Zeit wird nur das Modell gpt-4o-mini unterstützt.",
         )
         if self.formats.index(self.input_type) == InputFormat.FILE.value:
-            self.input_file = st.file_uploader(
+            uploaded_file = st.file_uploader(
                 "Bild Datei hochladen",
                 type=FILE_FORMAT_OPTIONS,
                 help="Lade das Bild hoch, das du beschreiben möchtest.",
             )
-            if self.input_file is not None:
-                ok, err_msg = save_uploadedfile(self.input_file, TEMP_PATH)
+            if uploaded_file is not None:
+                self.input_file, ok, err_msg = save_uploadedfile(uploaded_file, TEMP_PATH)
                 if ok:
                     image = Image.open(self.input_file)
                     st.image(
@@ -203,13 +203,12 @@ class Image2Text(ToolBase):
         if self.input_file is not None:
             image = Image.open(self.input_file)
             st.image(image, caption="Hochgeladenes Bild", use_column_width=True)
-            metadata = self.extract_metadata(TEMP_PATH + self.input_file)
+            metadata = self.extract_metadata(self.input_file)
             with st.expander("EXIF Metadaten"):
                 st.write(metadata)
         if st.button("Bild zu Text", disabled=self.input_file is None):
-            base64_image = encode_image(TEMP_PATH + self.input_file.name)
             with st.spinner("Bilderkennung läuft..."):
-                self.text = self.image2text(f"data:image/jpeg;base64,{base64_image}")
+                self.text = self.image2text(self.input_file)
         if self.text:
             st.text_area("Beschreibung des Bilds", self.text, height=500)
 

@@ -40,7 +40,7 @@ def save_wav_audio_data(wav_audio_data, file_name):
 class Speech2Text(ToolBase):
     def __init__(self, logger):
         super().__init__(logger)
-        self.title = "Audio zu Text"
+        self.title = "Speech2Text"
         self.formats = ["Demo", "Audio/Video Datei", "Audio aufnehmen"]
         self.script_name, script_extension = os.path.splitext(__file__)
         self.intro = self.get_intro()

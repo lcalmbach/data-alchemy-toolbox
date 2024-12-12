@@ -448,10 +448,6 @@ def get_token_size(text: str, base: str = "cl100k_base") -> int:
     return len(openai_tokens)
 
 
-def save_uploaded_image(uploaded_file, path: str):
-    with open(os.path.join(path, uploaded_file.name), "wb") as f:
-        f.write(uploaded_file.getvalue())
-
 
 def save_uploadedfile(uploadedfile, path: str):
     ok, err_msg, file_path = True, "", ""
