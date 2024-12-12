@@ -40,7 +40,7 @@ class ImageGenerator(ToolBase):
         if self.formats.index(self.input_type) == InputFormat.DEMO.value:
             self.prompt = st.text_area(
                 "Beispiel",
-                value="Ein Bild von vielen bunten Spiel-Würfeln, die einen Baselerstab (Wappen der Stadt Basel) bilden.",
+                value="Ein Schwarm von Zahlen im 3D format die aus einer stillen blauen Wasseroberfläche in den dunklen Raum oberhalb des Wassers schweben.",
                 height=300,
             )
 
