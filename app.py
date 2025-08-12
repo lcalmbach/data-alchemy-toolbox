@@ -131,6 +131,16 @@ def check_in_session_state(key: str, logger):
     if key not in st.session_state:
         st.session_state[key] = menu_dic[key](logger)
 
+_warning_msg = """
+        Diese Applikation ist eine öffentliche Applikation um zu demonstrieren, was mit KI möglich ist. Die Daten werden auf öffentlichen KI Modellen verarbeiten.
+        Der Datenschutz ist nicht gewährleistet. Verarbeiten Sie keine sensiblen Informationen auf dieser Anwendung.
+        Mitarbeiter der Kantonalen Verwaltung Basel-Stadt wird dringend empfohlen die internen KI Anwendungen vom DCC Data Competence Ceter am Statistischen Amt Basel-Stadt zu verwenden.
+        Sie finden weiter Informationen und Links zu den Anwendungen auf dem [Basel-Stadt Intranet](https://my.intranet.bs.ch/SitePages/News.aspx?ItemId=10637) oder auf [bs.ch/ki](https://bs.ch/ki).
+        """
+
+@st.dialog("Öffentliche Demonstration")
+def warning_message():
+    st.warning(_warning_msg, icon="⚠️")
 
 def main():
     """
@@ -140,6 +150,11 @@ def main():
 
     init_layout()
     logger = logging.getLogger("data-alchemy-toolbox")
+
+    st.warning(_warning_msg, icon="⚠️")
+
+    warning_message()
+
     menu_options = list(menu_dic.keys())
     with st.sidebar:
         st.markdown(f"## {MY_EMOJI} {MY_NAME}")
