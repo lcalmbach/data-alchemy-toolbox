@@ -1,4 +1,4 @@
-streamlit==1.33.0
+streamlit==1.48.0
 streamlit_lottie==0.0.5
 streamlit_option_menu==0.3.6
 streamlit_chat==0.1.1
